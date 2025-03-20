@@ -1,0 +1,62 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}Welcome to My Blog{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Discover Amazing Stories</h1>
+    <p>Welcome to our blog where we share interesting articles, insights, and perspectives on various topics. 
+       Join us on this journey of discovery and learning.</p>
+</section>
+
+<section class="features">
+    <div class="feature-card">
+        <h3>Latest Posts</h3>
+        <p>Stay updated with our most recent articles and stories.</p>
+    </div>
+    <div class="feature-card">
+        <h3>Categories</h3>
+        <p>Explore content organized by topics and themes.</p>
+    </div>
+    <div class="feature-card">
+        <h3>About Us</h3>
+        <p>Learn more about our mission and the team behind this blog.</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero {
+        margin: 2rem 0;
+        text-align: center;
+    }
+    .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    .hero p {
+        font-size: 1.2rem;
+        color: #666;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 4rem 0;
+    }
+    .feature-card {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .feature-card h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %} 

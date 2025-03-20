@@ -1,0 +1,195 @@
+{% extends 'myapp/base.html' %}
+{% load static %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h1>{{ post.title }}</h1>
+            <p class="text-muted">Posted by <a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a> on {{ post.created_date|date:"F d, Y" }}</p>
+        </div>
+        <div class="card-body">
+            <div class="post-content">
+                {{ post.content|linebreaks }}
+            </div>
+            
+            {% if user.is_authenticated %}
+                <form method="post" action="{% url 'like_post' post.pk %}" class="mt-3">
+                    {% csrf_token %}
+                    <button type="submit" class="btn {% if user in post.likes.all %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                        {% if user in post.likes.all %}
+                            <i class="fas fa-heart"></i> Unlike
+                        {% else %}
+                            <i class="far fa-heart"></i> Like
+                        {% endif %}
+                    </button>
+                    <span class="ml-2">{{ post.total_likes }} likes</span>
+                </form>
+            {% else %}
+                <p class="mt-3">Please <a href="{% url 'login' %}">log in</a> to like this post.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3>Comments</h3>
+        </div>
+        <div class="card-body">
+            {% if user.is_authenticated %}
+                <a href="{% url 'add-comment' post.pk %}" class="btn btn-primary mb-4">Add a Comment</a>
+            {% else %}
+                <p>Please <a href="{% url 'login' %}?next={{ request.path }}">log in</a> to leave a comment.</p>
+            {% endif %}
+
+            {% if post.comments.all %}
+                {% for comment in post.comments.all %}
+                    <div class="comment mb-3">
+                        <p><strong>{{ comment.author.username }}</strong> said on {{ comment.created_date|date:"F d, Y" }}:</p>
+                        <p>{{ comment.content }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No comments yet. Be the first to comment!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .post-detail {
+        margin-top: 2rem;
+    }
+    .post-header {
+        margin-bottom: 2rem;
+    }
+    .post-title {
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    .post-meta {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    .post-meta a {
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    .post-meta a:hover {
+        color: #1abc9c;
+    }
+    .post-content {
+        line-height: 1.8;
+        margin-bottom: 2rem;
+    }
+    .comments-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+    .comments-section h2 {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+    }
+    .comments-list {
+        margin-bottom: 2rem;
+    }
+    .comment {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    .comment:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .comment-meta {
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .comment-author {
+        font-weight: 500;
+        color: #2c3e50;
+        margin-right: 0.5rem;
+    }
+    .comment-content {
+        line-height: 1.6;
+    }
+    .no-comments {
+        color: #6c757d;
+        font-style: italic;
+        margin-bottom: 2rem;
+    }
+    .comment-form {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 2rem;
+    }
+    .comment-form h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+    .comment-form textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+        margin-bottom: 1rem;
+    }
+    .submit-button {
+        background-color: #2c3e50;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s;
+    }
+    .submit-button:hover {
+        background-color: #1abc9c;
+    }
+    .login-prompt {
+        text-align: center;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 2rem;
+    }
+    .login-prompt a {
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    .login-prompt a:hover {
+        color: #1abc9c;
+    }
+    .post-footer {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+    .back-link {
+        display: inline-block;
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    .back-link:hover {
+        color: #1abc9c;
+    }
+</style>
+{% endblock %} 

@@ -1,0 +1,22 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>{% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ form.as_p }}
+                </div>
+                <button type="submit" class="btn btn-primary">{% if form.instance.pk %}Update Post{% else %}Create Post{% endif %}</button>
+                <a href="{% url 'post-list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

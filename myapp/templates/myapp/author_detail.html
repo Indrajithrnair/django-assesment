@@ -1,0 +1,114 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}{{ author.username }} - Author Profile{% endblock %}
+
+{% block content %}
+<div class="author-profile">
+    <header class="author-header">
+        <h1 class="author-name">{{ author.username }}</h1>
+        <div class="author-bio">
+            <p>
+                {% if author.first_name or author.last_name %}
+                    {{ author.first_name }} {{ author.last_name }}
+                {% endif %}
+            </p>
+            <p>Member since {{ author.date_joined|date:"F Y" }}</p>
+            <!-- Placeholder for additional biographical information -->
+            <p>This is where additional biographical information about the author would appear.</p>
+        </div>
+    </header>
+    
+    <section class="author-posts">
+        <h2>Posts by {{ author.username }}</h2>
+        
+        {% if posts %}
+            <ul class="post-list">
+                {% for post in posts %}
+                    <li class="post-item">
+                        <a href="{% url 'post-detail' post.pk %}" class="post-link">{{ post.title }}</a>
+                        <span class="post-date">{{ post.created_date|date:"F d, Y" }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>This author hasn't published any posts yet.</p>
+        {% endif %}
+    </section>
+    
+    <div class="author-footer">
+        <a href="{% url 'post-list' %}" class="back-link">← Back to all posts</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .author-profile {
+        margin-top: 2rem;
+    }
+    .author-header {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .author-name {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+    .author-bio {
+        color: #666;
+        line-height: 1.6;
+    }
+    .author-bio p {
+        margin-bottom: 0.5rem;
+    }
+    .author-posts {
+        margin-bottom: 2rem;
+    }
+    .author-posts h2 {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
+    .post-list {
+        list-style: none;
+        padding: 0;
+    }
+    .post-item {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f8f9fa;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .post-link {
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    .post-link:hover {
+        color: #1abc9c;
+    }
+    .post-date {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    .author-footer {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+    .back-link {
+        display: inline-block;
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    .back-link:hover {
+        color: #1abc9c;
+    }
+</style>
+{% endblock %} 

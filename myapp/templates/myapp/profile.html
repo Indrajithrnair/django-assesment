@@ -1,0 +1,84 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Your Profile</h1>
+    
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- User's Posts -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Your Posts</h2>
+        </div>
+        <div class="card-body">
+            {% if posts %}
+                {% for post in posts %}
+                    <div class="post-item mb-3">
+                        <h3><a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></h3>
+                        <p class="text-muted">Posted on {{ post.created_date|date:"F d, Y" }}</p>
+                        <div class="btn-group">
+                            <a href="{% url 'post-update' post.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                            <a href="{% url 'post-delete' post.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>You haven't created any posts yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- User's Comments -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Your Comments</h2>
+        </div>
+        <div class="card-body">
+            {% if comments %}
+                {% for comment in comments %}
+                    <div class="comment-item mb-3">
+                        <p><strong>On post:</strong> <a href="{% url 'post-detail' comment.post.pk %}">{{ comment.post.title }}</a></p>
+                        <p>{{ comment.content }}</p>
+                        <p class="text-muted">Posted on {{ comment.created_date|date:"F d, Y" }}</p>
+                        <div class="btn-group">
+                            <a href="{% url 'comment_update' comment.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                            <a href="{% url 'comment_delete' comment.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>You haven't made any comments yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- User's Liked Posts -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Posts You've Liked</h2>
+        </div>
+        <div class="card-body">
+            {% if liked_posts %}
+                {% for post in liked_posts %}
+                    <div class="post-item mb-3">
+                        <h3><a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></h3>
+                        <p class="text-muted">Posted by {{ post.author.username }} on {{ post.created_date|date:"F d, Y" }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>You haven't liked any posts yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

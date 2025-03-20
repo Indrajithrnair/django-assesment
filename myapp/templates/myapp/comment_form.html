@@ -1,0 +1,24 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Add Comment</h2>
+            <p>Commenting on: <a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></p>
+        </div>
+        <div class="card-body">
+            <p class="mb-3">Please share your thoughts about this blog post. Be respectful and constructive in your comments.</p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ form.as_p }}
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Comment</button>
+                <a href="{% url 'post-detail' post.pk %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
