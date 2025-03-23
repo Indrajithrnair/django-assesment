@@ -5,17 +5,36 @@ from django.urls import reverse_lazy
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
-from .models import Post, Comment
-from .forms import CommentForm
+from .models import Post, Comment, Category, Tag
+from .forms import CommentForm, PostSearchForm, PostForm
 from django.contrib.auth.models import User
+from django.db.models import Q, Count
+from django.utils import timezone
+from datetime import timedelta
+from django.utils.text import slugify
+from django.core.paginator import Paginator
+
+class CategoryTagContextMixin:
+    """Mixin to add categories and popular tags to context"""
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.all()
+        context['popular_tags'] = Tag.objects.annotate(num_posts=Count('posts')).order_by('-num_posts')[:10]
+        return context
 
 # Create your views here.
 
 def home(request):
     """View function for the home page."""
-    return render(request, 'myapp/home.html')
+    categories = Category.objects.all()
+    popular_tags = Tag.objects.annotate(num_posts=Count('posts')).order_by('-num_posts')[:10]
+    context = {
+        'categories': categories,
+        'popular_tags': popular_tags,
+    }
+    return render(request, 'myapp/home.html', context)
 
-class CustomLoginView(LoginView):
+class CustomLoginView(CategoryTagContextMixin, LoginView):
     """Custom login view."""
     template_name = 'myapp/login.html'
     form_class = AuthenticationForm
@@ -30,14 +49,21 @@ class CustomLogoutView(LogoutView):
     """Custom logout view."""
     next_page = 'home'
 
-class PostListView(generic.ListView):
+class PostListView(CategoryTagContextMixin, generic.ListView):
     """View for listing all blog posts with pagination."""
     model = Post
     template_name = 'myapp/post_list.html'
     context_object_name = 'posts'
     paginate_by = 5
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get the 10 most used tags
+        context['popular_tags'] = Tag.objects.annotate(
+            num_posts=Count('posts')).order_by('-num_posts')[:10]
+        return context
 
-class PostDetailView(generic.DetailView):
+class PostDetailView(CategoryTagContextMixin, generic.DetailView):
     """View for displaying a single blog post."""
     model = Post
     template_name = 'myapp/post_detail.html'
@@ -45,6 +71,12 @@ class PostDetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['comment_form'] = CommentForm()
+        # Add related posts
+        context['related_posts'] = self.object.get_related_posts()
+        # Add categories and popular tags
+        context['categories'] = Category.objects.all()
+        context['popular_tags'] = Tag.objects.annotate(
+            num_posts=Count('posts')).order_by('-num_posts')[:10]
         return context
         
     def post(self, request, *args, **kwargs):
@@ -60,8 +92,46 @@ class PostDetailView(generic.DetailView):
                 return redirect('post-detail', pk=self.object.pk)
         return self.get(request, *args, **kwargs)
 
-class AddCommentView(LoginRequiredMixin, generic.CreateView):
-    """View for adding a comment to a blog post."""
+class CategoryDetailView(CategoryTagContextMixin, generic.DetailView):
+    """View for displaying posts in a category."""
+    model = Category
+    template_name = 'myapp/category_detail.html'
+    context_object_name = 'category'
+    slug_url_kwarg = 'slug'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get posts for this category with pagination
+        category = self.get_object()
+        posts_list = Post.objects.filter(category=category)
+        paginator = Paginator(posts_list, 5)
+        page = self.request.GET.get('page')
+        posts = paginator.get_page(page)
+        
+        context['posts'] = posts
+        return context
+
+class TagDetailView(CategoryTagContextMixin, generic.DetailView):
+    """View for displaying posts with a specific tag."""
+    model = Tag
+    template_name = 'myapp/tag_detail.html'
+    context_object_name = 'tag'
+    slug_url_kwarg = 'slug'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get posts for this tag with pagination
+        tag = self.get_object()
+        posts_list = Post.objects.filter(tags=tag)
+        paginator = Paginator(posts_list, 5)
+        page = self.request.GET.get('page')
+        posts = paginator.get_page(page)
+        
+        context['posts'] = posts
+        return context
+
+class AddCommentView(LoginRequiredMixin, CategoryTagContextMixin, generic.CreateView):
+    """View for adding a comment to a post."""
     model = Comment
     form_class = CommentForm
     template_name = 'myapp/comment_form.html'
@@ -80,7 +150,7 @@ class AddCommentView(LoginRequiredMixin, generic.CreateView):
     def get_success_url(self):
         return reverse_lazy('post-detail', kwargs={'pk': self.kwargs['pk']})
 
-class AuthorDetailView(generic.DetailView):
+class AuthorDetailView(CategoryTagContextMixin, generic.DetailView):
     """View for displaying author information."""
     model = User
     template_name = 'myapp/author_detail.html'
@@ -89,9 +159,14 @@ class AuthorDetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['posts'] = Post.objects.filter(author=self.object).order_by('-created_date')
+        # Add categories and popular tags
+        context['categories'] = Category.objects.all()
+        context['popular_tags'] = Tag.objects.annotate(
+            num_posts=Count('posts')).order_by('-num_posts')[:10]
         return context
 
-class ProfileView(LoginRequiredMixin, generic.ListView):
+class ProfileView(LoginRequiredMixin, CategoryTagContextMixin, generic.ListView):
+    """View for displaying user profile."""
     template_name = 'myapp/profile.html'
     context_object_name = 'posts'
     paginate_by = 10
@@ -105,7 +180,8 @@ class ProfileView(LoginRequiredMixin, generic.ListView):
         context['liked_posts'] = Post.objects.filter(likes=self.request.user)
         return context
 
-class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, CategoryTagContextMixin, generic.UpdateView):
+    """View for updating a comment."""
     model = Comment
     fields = ['content']
     template_name = 'myapp/comment_form.html'
@@ -120,7 +196,8 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateV
         comment = self.get_object()
         return self.request.user == comment.author
 
-class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, CategoryTagContextMixin, generic.DeleteView):
+    """View for deleting a comment."""
     model = Comment
     template_name = 'myapp/comment_confirm_delete.html'
     success_url = reverse_lazy('profile')
@@ -133,25 +210,47 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteV
         comment = self.get_object()
         return self.request.user == comment.author
 
-class PostCreateView(LoginRequiredMixin, generic.CreateView):
+class PostCreateView(LoginRequiredMixin, CategoryTagContextMixin, generic.CreateView):
     model = Post
-    fields = ['title', 'content']
+    form_class = PostForm
     template_name = 'myapp/post_form.html'
     success_url = reverse_lazy('post-list')
 
     def form_valid(self, form):
         form.instance.author = self.request.user
+        
+        # Check if a new category was created
+        if form.cleaned_data.get('new_category'):
+            messages.success(self.request, f"New category '{form.cleaned_data['new_category']}' was created!")
+        
+        # Check if new tags were created
+        if form.cleaned_data.get('new_tags'):
+            tag_count = len([t for t in form.cleaned_data['new_tags'].split(',') if t.strip()])
+            if tag_count > 0:
+                messages.success(self.request, f"{tag_count} new tag(s) were created!")
+        
         messages.success(self.request, 'Your post has been created!')
         return super().form_valid(form)
 
-class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, CategoryTagContextMixin, generic.UpdateView):
     model = Post
-    fields = ['title', 'content']
+    form_class = PostForm
     template_name = 'myapp/post_form.html'
     success_url = reverse_lazy('post-list')
 
     def form_valid(self, form):
         form.instance.author = self.request.user
+        
+        # Check if a new category was created
+        if form.cleaned_data.get('new_category'):
+            messages.success(self.request, f"New category '{form.cleaned_data['new_category']}' was created!")
+        
+        # Check if new tags were created
+        if form.cleaned_data.get('new_tags'):
+            tag_count = len([t for t in form.cleaned_data['new_tags'].split(',') if t.strip()])
+            if tag_count > 0:
+                messages.success(self.request, f"{tag_count} new tag(s) were created!")
+        
         messages.success(self.request, 'Your post has been updated!')
         return super().form_valid(form)
 
@@ -159,7 +258,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView
         post = self.get_object()
         return self.request.user == post.author
 
-class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, CategoryTagContextMixin, generic.DeleteView):
     model = Post
     template_name = 'myapp/post_confirm_delete.html'
     success_url = reverse_lazy('post-list')
@@ -189,7 +288,8 @@ def like_post(request, pk):
     
     return redirect('post-detail', pk=pk)
 
-class BloggerListView(generic.ListView):
+class BloggerListView(CategoryTagContextMixin, generic.ListView):
+    """View for displaying a list of bloggers."""
     model = User
     template_name = 'myapp/blogger_list.html'
     context_object_name = 'bloggers'
@@ -198,3 +298,87 @@ class BloggerListView(generic.ListView):
     def get_queryset(self):
         # Get only users who have created posts
         return User.objects.filter(post__isnull=False).distinct().order_by('username')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add categories and popular tags
+        context['categories'] = Category.objects.all()
+        context['popular_tags'] = Tag.objects.annotate(
+            num_posts=Count('posts')).order_by('-num_posts')[:10]
+        return context
+
+class PostSearchView(CategoryTagContextMixin, generic.ListView):
+    """View for searching and filtering blog posts."""
+    model = Post
+    template_name = 'myapp/post_search.html'
+    context_object_name = 'posts'
+    paginate_by = 5
+    
+    def get_queryset(self):
+        form = PostSearchForm(self.request.GET)
+        queryset = Post.objects.all()
+        
+        if form.is_valid():
+            # Apply text search filter
+            query = form.cleaned_data.get('query')
+            if query:
+                queryset = queryset.filter(
+                    Q(title__icontains=query) | Q(content__icontains=query)
+                )
+            
+            # Apply category filter
+            category = form.cleaned_data.get('category')
+            if category:
+                queryset = queryset.filter(category=category)
+                
+            # Apply tag filter
+            tag = form.cleaned_data.get('tag')
+            if tag:
+                queryset = queryset.filter(tags=tag)
+            
+            # Apply date filter
+            date_filter = form.cleaned_data.get('date_filter')
+            if date_filter:
+                today = timezone.now().date()
+                if date_filter == 'today':
+                    queryset = queryset.filter(created_date__date=today)
+                elif date_filter == 'this_week':
+                    week_start = today - timedelta(days=today.weekday())
+                    queryset = queryset.filter(created_date__date__gte=week_start)
+                elif date_filter == 'this_month':
+                    queryset = queryset.filter(
+                        created_date__year=today.year,
+                        created_date__month=today.month
+                    )
+                elif date_filter == 'this_year':
+                    queryset = queryset.filter(created_date__year=today.year)
+            
+            # Apply sorting
+            sort_by = form.cleaned_data.get('sort_by')
+            if sort_by:
+                if sort_by == '-likes':
+                    # For 'Most liked', we need to annotate with likes count
+                    queryset = queryset.annotate(like_count=Count('likes')).order_by('-like_count')
+                else:
+                    queryset = queryset.order_by(sort_by)
+        else:
+            # Default sorting if form is not valid
+            queryset = queryset.order_by('-created_date')
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_form'] = PostSearchForm(self.request.GET or None)
+        # Keep the query parameters for pagination
+        if self.request.GET:
+            query_params = self.request.GET.copy()
+            if 'page' in query_params:
+                del query_params['page']
+            context['query_params'] = query_params.urlencode()
+        
+        # Add categories and popular tags
+        context['categories'] = Category.objects.all()
+        context['popular_tags'] = Tag.objects.annotate(
+            num_posts=Count('posts')).order_by('-num_posts')[:10]
+        return context

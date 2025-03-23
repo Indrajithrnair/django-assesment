@@ -1,0 +1,201 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}Posts tagged with {{ tag.name }}{% endblock %}
+
+{% block content %}
+<div class="tag-header">
+    <h1>Posts tagged with <span class="tag-highlight">{{ tag.name }}</span></h1>
+</div>
+
+<div class="post-list">
+    {% if posts %}
+        {% for post in posts %}
+            <div class="post-item">
+                <h2 class="post-title">
+                    <a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a>
+                </h2>
+                <div class="post-meta">
+                    <div>
+                        Posted on {{ post.created_date|date:"F d, Y" }} by 
+                        <a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a>
+                        {% if post.category %}
+                        in <a href="{% url 'category-detail' post.category.slug %}" class="post-category">{{ post.category.name }}</a>
+                        {% endif %}
+                        • {{ post.comments.count }} comment{% if post.comments.count != 1 %}s{% endif %}
+                        • {{ post.likes.count }} like{% if post.likes.count != 1 %}s{% endif %}
+                    </div>
+                    
+                    {% if post.tags.all %}
+                    <div class="post-tags">
+                        {% for post_tag in post.tags.all %}
+                        <a href="{% url 'tag-detail' post_tag.slug %}" class="tag {% if post_tag.id == tag.id %}current-tag{% endif %}">{{ post_tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="post-excerpt">
+                    {{ post.content|truncatewords:50 }}
+                </div>
+                <a href="{% url 'post-detail' post.pk %}" class="read-more">Read more</a>
+            </div>
+        {% endfor %}
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if posts.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ posts.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ posts.number }} of {{ posts.paginator.num_pages }}
+                </span>
+
+                {% if posts.has_next %}
+                    <a href="?page={{ posts.next_page_number }}">next</a>
+                    <a href="?page={{ posts.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    {% else %}
+        <p class="no-posts">No posts with this tag yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tag-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .tag-header h1 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .tag-highlight {
+        background-color: #f1c40f;
+        color: #2c3e50;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 1.8rem;
+    }
+    
+    .post-list {
+        margin-top: 2rem;
+    }
+    
+    .post-item {
+        margin-bottom: 2.5rem;
+        padding-bottom: 2.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .post-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    
+    .post-title {
+        margin-bottom: 0.75rem;
+    }
+    
+    .post-title a {
+        color: #2c3e50;
+        text-decoration: none;
+        transition: color 0.3s;
+        font-size: 1.5rem;
+    }
+    
+    .post-title a:hover {
+        color: #1abc9c;
+    }
+    
+    .post-meta {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    
+    .post-meta a {
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    
+    .post-meta a:hover {
+        color: #1abc9c;
+    }
+    
+    .post-category {
+        background-color: #3498db;
+        color: white !important;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        margin-left: 0.25rem;
+    }
+    
+    .post-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .tag {
+        background-color: #f1c40f;
+        color: #2c3e50;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+    
+    .current-tag {
+        background-color: #e67e22;
+        font-weight: bold;
+    }
+    
+    .tag:hover {
+        background-color: #f39c12;
+        text-decoration: none;
+    }
+    
+    .post-excerpt {
+        color: #495057;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .read-more {
+        display: inline-block;
+        color: #3498db;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+    
+    .read-more:hover {
+        color: #2980b9;
+    }
+    
+    .no-posts {
+        color: #6c757d;
+        font-style: italic;
+        padding: 2rem 0;
+        text-align: center;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %} 

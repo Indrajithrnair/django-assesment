@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, Comment
+from .models import Post, Comment, Category, Tag
 
 class CommentInline(admin.TabularInline):
     model = Comment
@@ -7,13 +7,31 @@ class CommentInline(admin.TabularInline):
     readonly_fields = ('created_date',)
     fields = ('author', 'content', 'created_date')
 
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name', 'description')
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name',)
+
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'created_date')
-    list_filter = ('created_date', 'author')
+    list_display = ('title', 'author', 'category', 'created_date', 'display_tags')
+    list_filter = ('created_date', 'author', 'category', 'tags')
     search_fields = ('title', 'content')
     date_hierarchy = 'created_date'
+    filter_horizontal = ('tags',)
     inlines = [CommentInline]
+    
+    def display_tags(self, obj):
+        return ", ".join([tag.name for tag in obj.tags.all()[:3]])
+    
+    display_tags.short_description = 'Tags'
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):

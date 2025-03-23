@@ -1,29 +1,55 @@
 {% extends 'myapp/base.html' %}
 
-{% block title %}All Blog Posts{% endblock %}
+{% block title %}Search Blog Posts{% endblock %}
 
 {% block content %}
-<div class="list-header">
-    <h1>All Blog Posts</h1>
-    <div class="list-actions">
-        {% if user.is_authenticated %}
-        <a href="{% url 'post-create' %}" class="create-link">✏️ New Post</a>
-        {% endif %}
-        <a href="{% url 'post-search' %}" class="search-link">Advanced Search</a>
-    </div>
+<div class="search-header">
+    <h1>Search Blog Posts</h1>
+    {% if user.is_authenticated %}
+    <a href="{% url 'post-create' %}" class="create-btn">✏️ New Post</a>
+    {% endif %}
 </div>
 
-<div class="post-list">
+<div class="search-container">
+    <form method="GET" action="{% url 'post-search' %}" class="search-form">
+        <div class="search-bar">
+            {{ search_form.query }}
+            <button type="submit" class="search-button">Search</button>
+        </div>
+        
+        <div class="filters-container">
+            <div class="filter-group">
+                <label for="{{ search_form.date_filter.id_for_label }}">{{ search_form.date_filter.label }}</label>
+                {{ search_form.date_filter }}
+            </div>
+            
+            <div class="filter-group">
+                <label for="{{ search_form.sort_by.id_for_label }}">{{ search_form.sort_by.label }}</label>
+                {{ search_form.sort_by }}
+            </div>
+            
+            <button type="submit" class="filter-button">Apply Filters</button>
+        </div>
+    </form>
+</div>
+
+<div class="search-results">
+    <h2>Results</h2>
     {% if posts %}
+        <p class="result-count">Found {{ page_obj.paginator.count }} post{% if page_obj.paginator.count != 1 %}s{% endif %}</p>
+        
         {% for post in posts %}
             <div class="post-item">
-                <h2 class="post-title">
+                <h3 class="post-title">
                     <a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a>
-                </h2>
+                </h3>
                 <div class="post-meta">
-                    Posted on {{ post.created_date|date:"F d, Y" }} by 
-                    <a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a>
-                    
+                    <div>
+                        Posted on {{ post.created_date|date:"F d, Y" }} by 
+                        <a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a>
+                        • {{ post.comments.count }} comment{% if post.comments.count != 1 %}s{% endif %}
+                        • {{ post.likes.count }} like{% if post.likes.count != 1 %}s{% endif %}
+                    </div>
                     <div class="post-actions">
                         <div class="share-dropdown">
                             <button class="share-button">Share</button>
@@ -41,14 +67,17 @@
                         </div>
                     </div>
                 </div>
+                <div class="post-excerpt">
+                    {{ post.content|truncatewords:30 }}
+                </div>
             </div>
         {% endfor %}
 
         <div class="pagination">
             <span class="step-links">
                 {% if page_obj.has_previous %}
-                    <a href="?page=1">&laquo; first</a>
-                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    <a href="?page=1{% if query_params %}&{{ query_params }}{% endif %}">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}">previous</a>
                 {% endif %}
 
                 <span class="current">
@@ -56,32 +85,27 @@
                 </span>
 
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">next</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    <a href="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if query_params %}&{{ query_params }}{% endif %}">last &raquo;</a>
                 {% endif %}
             </span>
         </div>
     {% else %}
-        <p>No blog posts available.</p>
+        <p class="no-results">No posts found matching your search criteria.</p>
     {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .list-header {
+    .search-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
     }
     
-    .list-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .create-link {
+    .create-btn {
         display: inline-block;
         background-color: #3498db;
         color: white;
@@ -92,57 +116,131 @@
         transition: background-color 0.3s;
     }
     
-    .create-link:hover {
+    .create-btn:hover {
         background-color: #2980b9;
     }
     
-    .search-link {
-        display: inline-block;
-        background-color: #1abc9c;
-        color: white;
-        padding: 0.5rem 1rem;
+    .search-container {
+        margin-bottom: 2rem;
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .search-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .search-bar {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .search-input {
+        flex-grow: 1;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
         border-radius: 4px;
-        text-decoration: none;
-        font-weight: 500;
-        transition: background-color 0.3s;
+        font-size: 1rem;
     }
     
-    .search-link:hover {
-        background-color: #16a085;
+    .search-button {
+        padding: 0.75rem 1.5rem;
+        background-color: #2c3e50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
     }
     
-    .post-list {
+    .search-button:hover {
+        background-color: #1a252f;
+    }
+    
+    .filters-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+        align-items: flex-end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        flex-grow: 1;
+    }
+    
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .filter-button {
+        padding: 0.5rem 1rem;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .filter-button:hover {
+        background-color: #5a6268;
+    }
+    
+    .search-results {
         margin-top: 2rem;
     }
+    
+    .result-count {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+    
     .post-item {
         margin-bottom: 2rem;
         padding-bottom: 2rem;
         border-bottom: 1px solid #e9ecef;
     }
+    
     .post-title {
         margin-bottom: 0.5rem;
     }
+    
     .post-title a {
         color: #2c3e50;
         text-decoration: none;
         transition: color 0.3s;
     }
+    
     .post-title a:hover {
         color: #1abc9c;
     }
+    
     .post-meta {
         color: #6c757d;
         font-size: 0.9rem;
+        margin-bottom: 0.75rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
+    
     .post-meta a {
         color: #2c3e50;
         text-decoration: none;
         font-weight: 500;
         transition: color 0.3s;
     }
+    
     .post-meta a:hover {
         color: #1abc9c;
     }
@@ -214,6 +312,29 @@
     
     .share-option:hover {
         opacity: 0.9;
+    }
+    
+    .post-excerpt {
+        color: #495057;
+        line-height: 1.5;
+    }
+    
+    .no-results {
+        color: #6c757d;
+        font-style: italic;
+        padding: 2rem 0;
+        text-align: center;
+    }
+    
+    /* Responsive layout */
+    @media (max-width: 768px) {
+        .search-bar {
+            flex-direction: column;
+        }
+        
+        .filters-container {
+            flex-direction: column;
+        }
     }
 </style>
 {% endblock %} 

@@ -1,22 +1,257 @@
 {% extends "myapp/base.html" %}
 {% load static %}
 
+{% block title %}{% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h2>{% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}</h2>
+<div class="form-container">
+    <h1 class="form-title">{% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}</h1>
+    
+    <form method="POST" class="post-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Title</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div class="form-error">{{ form.title.errors }}</div>
+            {% endif %}
         </div>
-        <div class="card-body">
-            <form method="POST">
-                {% csrf_token %}
-                <div class="form-group">
-                    {{ form.as_p }}
-                </div>
-                <button type="submit" class="btn btn-primary">{% if form.instance.pk %}Update Post{% else %}Create Post{% endif %}</button>
-                <a href="{% url 'post-list' %}" class="btn btn-secondary">Cancel</a>
-            </form>
+        
+        <div class="form-group">
+            <label for="{{ form.content.id_for_label }}">Content</label>
+            {{ form.content }}
+            {% if form.content.errors %}
+                <div class="form-error">{{ form.content.errors }}</div>
+            {% endif %}
         </div>
-    </div>
+        
+        <div class="form-group">
+            <label for="{{ form.category.id_for_label }}">Category</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+                <div class="form-error">{{ form.category.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.new_category.id_for_label }}">New Category</label>
+            {{ form.new_category }}
+            <small class="form-help">{{ form.new_category.help_text }}</small>
+            {% if form.new_category.errors %}
+                <div class="form-error">{{ form.new_category.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.tags.id_for_label }}">Existing Tags</label>
+            {{ form.tags }}
+            <small class="form-help">Hold CTRL (or CMD on Mac) to select multiple tags</small>
+            {% if form.tags.errors %}
+                <div class="form-error">{{ form.tags.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.new_tags.id_for_label }}">New Tags</label>
+            {{ form.new_tags }}
+            <small class="form-help">{{ form.new_tags.help_text }}</small>
+            {% if form.new_tags.errors %}
+                <div class="form-error">{{ form.new_tags.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">{% if form.instance.pk %}Update{% else %}Publish{% endif %}</button>
+            <a href="{% url 'post-list' %}" class="btn-secondary">Cancel</a>
+        </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<!-- Add Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .form-title {
+        margin-bottom: 1.5rem;
+        color: #2c3e50;
+        font-size: 1.8rem;
+    }
+    
+    .post-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .form-group input[type="text"] {
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .form-group textarea {
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+        min-height: 300px;
+        resize: vertical;
+    }
+    
+    .form-group select {
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+        background-color: white;
+    }
+    
+    .form-group select[multiple] {
+        min-height: 150px;
+    }
+    
+    .form-error {
+        color: #e74c3c;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+    
+    .form-help {
+        color: #7f8c8d;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-primary {
+        padding: 0.75rem 1.5rem;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+    
+    .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        background-color: #95a5a6;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #7f8c8d;
+    }
+    
+    /* Select2 custom styles */
+    .select2-container--default .select2-selection--multiple {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        min-height: 38px;
+    }
+    
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 8px;
+        margin: 3px;
+    }
+    
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: white;
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add jQuery and Select2 JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for the tags field
+        $('.select2-tags').select2({
+            placeholder: 'Select existing tags',
+            width: '100%'
+        });
+        
+        // Initially hide the new category field
+        const newCategoryField = $('#{{ form.new_category.id_for_label }}').closest('.form-group');
+        const categoryField = $('#{{ form.category.id_for_label }}');
+        
+        // Function to toggle new category field visibility
+        function toggleNewCategoryField() {
+            const selectedValue = categoryField.val();
+            if (selectedValue === '') {
+                newCategoryField.slideDown(200);
+            } else {
+                newCategoryField.slideUp(200);
+                // Clear the new category field when an existing category is selected
+                $('#{{ form.new_category.id_for_label }}').val('');
+            }
+        }
+        
+        // Initial check
+        toggleNewCategoryField();
+        
+        // Add change event listener
+        categoryField.on('change', toggleNewCategoryField);
+        
+        // Add form validation logic
+        $('form').on('submit', function(e) {
+            const categoryValue = categoryField.val();
+            const newCategoryValue = $('#{{ form.new_category.id_for_label }}').val().trim();
+            
+            // If no category is selected and no new category is entered, show error
+            if (categoryValue === '' && newCategoryValue === '') {
+                e.preventDefault();
+                alert('Please select an existing category or create a new one.');
+                return false;
+            }
+            
+            return true;
+        });
+    });
+</script>
 {% endblock %} 

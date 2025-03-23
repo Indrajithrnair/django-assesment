@@ -1,84 +1,189 @@
 {% extends "myapp/base.html" %}
 {% load static %}
 
+{% block title %}Your Profile{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Your Profile</h1>
+<div class="profile-header">
+    <h1>Your Profile</h1>
+    <a href="{% url 'post-create' %}" class="create-post-btn">✏️ Create New Post</a>
+</div>
     
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            {{ message }}
-        </div>
-        {% endfor %}
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
     </div>
-    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
 
-    <!-- User's Posts -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2>Your Posts</h2>
-        </div>
-        <div class="card-body">
-            {% if posts %}
-                {% for post in posts %}
-                    <div class="post-item mb-3">
-                        <h3><a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></h3>
-                        <p class="text-muted">Posted on {{ post.created_date|date:"F d, Y" }}</p>
-                        <div class="btn-group">
-                            <a href="{% url 'post-update' post.pk %}" class="btn btn-sm btn-primary">Edit</a>
-                            <a href="{% url 'post-delete' post.pk %}" class="btn btn-sm btn-danger">Delete</a>
-                        </div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p>You haven't created any posts yet.</p>
-            {% endif %}
-        </div>
+<!-- User's Posts -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2>Your Posts</h2>
     </div>
-
-    <!-- User's Comments -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2>Your Comments</h2>
-        </div>
-        <div class="card-body">
-            {% if comments %}
-                {% for comment in comments %}
-                    <div class="comment-item mb-3">
-                        <p><strong>On post:</strong> <a href="{% url 'post-detail' comment.post.pk %}">{{ comment.post.title }}</a></p>
-                        <p>{{ comment.content }}</p>
-                        <p class="text-muted">Posted on {{ comment.created_date|date:"F d, Y" }}</p>
-                        <div class="btn-group">
-                            <a href="{% url 'comment_update' comment.pk %}" class="btn btn-sm btn-primary">Edit</a>
-                            <a href="{% url 'comment_delete' comment.pk %}" class="btn btn-sm btn-danger">Delete</a>
-                        </div>
+    <div class="card-body">
+        {% if posts %}
+            {% for post in posts %}
+                <div class="post-item mb-3">
+                    <h3><a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></h3>
+                    <p class="text-muted">Posted on {{ post.created_date|date:"F d, Y" }}</p>
+                    <div class="btn-group">
+                        <a href="{% url 'post-update' post.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="{% url 'post-delete' post.pk %}" class="btn btn-sm btn-danger">Delete</a>
                     </div>
-                {% endfor %}
-            {% else %}
-                <p>You haven't made any comments yet.</p>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- User's Liked Posts -->
-    <div class="card">
-        <div class="card-header">
-            <h2>Posts You've Liked</h2>
-        </div>
-        <div class="card-body">
-            {% if liked_posts %}
-                {% for post in liked_posts %}
-                    <div class="post-item mb-3">
-                        <h3><a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></h3>
-                        <p class="text-muted">Posted by {{ post.author.username }} on {{ post.created_date|date:"F d, Y" }}</p>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p>You haven't liked any posts yet.</p>
-            {% endif %}
-        </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>You haven't created any posts yet.</p>
+        {% endif %}
     </div>
 </div>
+
+<!-- User's Comments -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2>Your Comments</h2>
+    </div>
+    <div class="card-body">
+        {% if comments %}
+            {% for comment in comments %}
+                <div class="comment-item mb-3">
+                    <p><strong>On post:</strong> <a href="{% url 'post-detail' comment.post.pk %}">{{ comment.post.title }}</a></p>
+                    <p>{{ comment.content }}</p>
+                    <p class="text-muted">Posted on {{ comment.created_date|date:"F d, Y" }}</p>
+                    <div class="btn-group">
+                        <a href="{% url 'comment_update' comment.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="{% url 'comment_delete' comment.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>You haven't made any comments yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- User's Liked Posts -->
+<div class="card">
+    <div class="card-header">
+        <h2>Posts You've Liked</h2>
+    </div>
+    <div class="card-body">
+        {% if liked_posts %}
+            {% for post in liked_posts %}
+                <div class="post-item mb-3">
+                    <h3><a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></h3>
+                    <p class="text-muted">Posted by {{ post.author.username }} on {{ post.created_date|date:"F d, Y" }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>You haven't liked any posts yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .create-post-btn {
+        display: inline-block;
+        background-color: #3498db;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.3s;
+    }
+    
+    .create-post-btn:hover {
+        background-color: #2980b9;
+    }
+    
+    .card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+    
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .card-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #2c3e50;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .post-item, .comment-item {
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .post-item:last-child, .comment-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background-color: #3498db;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+    
+    .btn-danger {
+        background-color: #e74c3c;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c0392b;
+    }
+    
+    .text-muted {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+    
+    .alert {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+    }
+</style>
 {% endblock %} 

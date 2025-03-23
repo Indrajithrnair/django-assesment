@@ -28,6 +28,36 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header-search {
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            width: 100%;
+            max-width: 300px;
+        }
+        .header-search input {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 100%;
+            padding: 0.25rem;
+            outline: none;
+        }
+        .header-search input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .header-search-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
         }
         .main-wrapper {
             display: flex;
@@ -58,6 +88,40 @@
         }
         .sidebar-nav a:hover {
             color: #1abc9c;
+        }
+        .sidebar-nav .nav-item-search {
+            background-color: #1abc9c;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+        }
+        .sidebar-nav .nav-item-search a {
+            color: white;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .sidebar-nav .nav-item-search a:hover {
+            background-color: #16a085;
+            border-radius: 4px;
+        }
+        .sidebar-nav .nav-item-create {
+            background-color: #3498db;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+        }
+        .sidebar-nav .nav-item-create a {
+            color: white;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .sidebar-nav .nav-item-create a:hover {
+            background-color: #2980b9;
+            border-radius: 4px;
         }
         main {
             flex-grow: 1;
@@ -137,6 +201,77 @@
             color: #2c3e50;
             margin-bottom: 1rem;
         }
+        .logout-button {
+            background: none;
+            border: none;
+            color: #2c3e50;
+            font-family: inherit;
+            font-size: inherit;
+            cursor: pointer;
+            font-weight: 500;
+            text-align: left;
+            padding: 0.5rem 0;
+            width: 100%;
+            transition: color 0.3s;
+        }
+        .logout-button:hover {
+            color: #1abc9c;
+        }
+        .nav-section {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .nav-section h3 {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .sidebar-subnav {
+            list-style: none;
+            padding-left: 0.5rem;
+        }
+        
+        .sidebar-subnav li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-subnav a {
+            font-weight: normal;
+            padding: 0.25rem 0;
+        }
+        
+        .nav-empty {
+            color: #6c757d;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        .sidebar-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding-left: 0.5rem;
+        }
+        
+        .sidebar-tag {
+            background-color: #f1c40f;
+            color: #2c3e50;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-weight: normal;
+        }
+        
+        .sidebar-tag:hover {
+            background-color: #f39c12;
+            text-decoration: none;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -145,6 +280,10 @@
         <div class="header-content">
             <h1>My Blog</h1>
             <p>A place for thoughts, ideas, and stories</p>
+            <form action="{% url 'post-search' %}" method="GET" class="header-search">
+                <input type="text" name="query" placeholder="Search blog posts...">
+                <button type="submit" class="header-search-btn">🔍</button>
+            </form>
         </div>
     </header>
 
@@ -152,10 +291,37 @@
         <aside class="sidebar">
             <nav>
                 <ul class="sidebar-nav">
+                    <li class="nav-item-search"><a href="{% url 'post-search' %}">🔍 Search Posts</a></li>
                     <li><a href="{% url 'home' %}">Home</a></li>
                     <li><a href="{% url 'post-list' %}">All Blog Posts</a></li>
                     <li><a href="{% url 'blogger-list' %}">Our Bloggers</a></li>
+                    
+                    <!-- Categories Section -->
+                    <li class="nav-section">
+                        <h3>Categories</h3>
+                        <ul class="sidebar-subnav">
+                            {% for category in categories %}
+                                <li><a href="{% url 'category-detail' category.slug %}">{{ category.name }}</a></li>
+                            {% empty %}
+                                <li class="nav-empty">No categories yet</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    
+                    <!-- Popular Tags Section -->
+                    <li class="nav-section">
+                        <h3>Popular Tags</h3>
+                        <div class="sidebar-tags">
+                            {% for tag in popular_tags %}
+                                <a href="{% url 'tag-detail' tag.slug %}" class="sidebar-tag">{{ tag.name }}</a>
+                            {% empty %}
+                                <span class="nav-empty">No tags yet</span>
+                            {% endfor %}
+                        </div>
+                    </li>
+                    
                     {% if user.is_authenticated %}
+                        <li class="nav-item-create"><a href="{% url 'post-create' %}">✏️ Create New Post</a></li>
                         <li>
                             <form method="post" action="{% url 'logout' %}" style="display: inline;">
                                 {% csrf_token %}
