@@ -63,24 +63,24 @@ class Post(models.Model):
     
     def get_related_posts(self):
         """Get posts that share the same category or tags."""
-        related_posts = Post.objects.exclude(id=self.id)
+        # Create empty sets to store post IDs
+        related_post_ids = set()
         
         # If the post has a category, get posts from the same category
         if self.category:
-            related_posts = related_posts.filter(category=self.category)
+            category_posts = Post.objects.filter(category=self.category).exclude(id=self.id)
+            related_post_ids.update(category_posts.values_list('id', flat=True))
         
         # Add posts that share tags (if this post has tags)
         tags = self.tags.all()
         if tags.exists():
             tagged_posts = Post.objects.filter(tags__in=tags).exclude(id=self.id).distinct()
-            # Combine the two querysets without duplicates
-            if related_posts.exists():
-                related_posts = (related_posts | tagged_posts).distinct()
-            else:
-                related_posts = tagged_posts
+            related_post_ids.update(tagged_posts.values_list('id', flat=True))
         
-        # Return at most 3 related posts, ordered by created date
-        return related_posts.order_by('-created_date')[:3]
+        # Get the related posts by ID
+        related_posts = Post.objects.filter(id__in=related_post_ids).order_by('-created_date')[:3]
+        
+        return related_posts
 
     def increment_view_count(self):
         """Increment the view count for this post."""

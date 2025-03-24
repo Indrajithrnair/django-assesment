@@ -1,0 +1,242 @@
+{% extends 'myapp/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "About Us" %}{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>{% trans "About Our Blog" %}</h1>
+    <p>{% trans "Learn more about our mission, our team, and what makes us passionate about sharing stories." %}</p>
+</section>
+
+<section class="about-content">
+    <div class="about-card">
+        <h2><i class="fas fa-book-reader"></i> {% trans "Our Mission" %}</h2>
+        <p>{% trans "We created this blog with a simple mission: to share knowledge, inspire creativity, and build a community of passionate readers and writers. We believe in the power of words to change perspectives, spark conversations, and create connections across the world." %}</p>
+    </div>
+    
+    <div class="about-card">
+        <h2><i class="fas fa-users"></i> {% trans "Our Team" %}</h2>
+        <p>{% trans "Our team consists of passionate writers, editors, and tech enthusiasts who work together to bring you high-quality content. We come from diverse backgrounds and have varied interests, which helps us create a well-rounded blog that caters to different readers." %}</p>
+    </div>
+    
+    <div class="about-card">
+        <h2><i class="fas fa-lightbulb"></i> {% trans "Our Values" %}</h2>
+        <ul>
+            <li><strong>{% trans "Quality" %}</strong> - {% trans "We strive for excellence in every post we publish." %}</li>
+            <li><strong>{% trans "Integrity" %}</strong> - {% trans "We remain honest and transparent in our content." %}</li>
+            <li><strong>{% trans "Inclusivity" %}</strong> - {% trans "We welcome diverse perspectives and voices." %}</li>
+            <li><strong>{% trans "Community" %}</strong> - {% trans "We foster meaningful discussions and connections." %}</li>
+            <li><strong>{% trans "Growth" %}</strong> - {% trans "We continuously learn and improve our content." %}</li>
+        </ul>
+    </div>
+    
+    <div class="about-card timeline">
+        <h2><i class="fas fa-history"></i> {% trans "Our Journey" %}</h2>
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <h3>2023</h3>
+                <p>{% trans "Our blog was born with a small team of passionate writers." %}</p>
+            </div>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <h3>2024</h3>
+                <p>{% trans "We revamped our platform with new features and a beautiful design." %}</p>
+            </div>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <h3>{% trans "Today" %}</h3>
+                <p>{% trans "We continue to grow, with a thriving community of readers and contributors." %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="about-card contact">
+        <h2><i class="fas fa-envelope"></i> {% trans "Get in Touch" %}</h2>
+        <p>{% trans "Have questions, suggestions, or want to contribute to our blog? We'd love to hear from you! Reach out to us using the following methods:" %}</p>
+        <div class="contact-methods">
+            <div class="contact-method">
+                <i class="fas fa-envelope-open-text"></i>
+                <h3>{% trans "Email" %}</h3>
+                <p>contact@myblog.com</p>
+            </div>
+            <div class="contact-method">
+                <i class="fas fa-comments"></i>
+                <h3>{% trans "Social Media" %}</h3>
+                <div class="social-links">
+                    <a href="#" title="Facebook"><i class="fab fa-facebook"></i></a>
+                    <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .about-card {
+        background-color: var(--bg-secondary);
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px var(--shadow-color);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .about-card h2 {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .about-card h2 i {
+        color: var(--primary-color);
+    }
+    
+    .about-card p {
+        color: var(--text-primary);
+        line-height: 1.7;
+        margin-bottom: 1rem;
+    }
+    
+    .about-card ul {
+        padding-left: 1rem;
+        color: var(--text-primary);
+        line-height: 1.7;
+    }
+    
+    .about-card ul li {
+        margin-bottom: 0.75rem;
+    }
+    
+    .about-card ul li strong {
+        color: var(--primary-color);
+    }
+    
+    /* Timeline styles */
+    .timeline {
+        position: relative;
+    }
+    
+    .timeline-item {
+        display: flex;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+    
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: 12px;
+        top: 30px;
+        bottom: -30px;
+        width: 2px;
+        background-color: var(--primary-color);
+        opacity: 0.3;
+    }
+    
+    .timeline-item:last-child:before {
+        display: none;
+    }
+    
+    .timeline-dot {
+        min-width: 25px;
+        height: 25px;
+        background-color: var(--primary-color);
+        border-radius: 50%;
+        margin-right: 1.5rem;
+    }
+    
+    .timeline-content {
+        padding-top: 3px;
+    }
+    
+    .timeline-content h3 {
+        color: var(--text-primary);
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Contact styles */
+    .contact-methods {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        margin-top: 1.5rem;
+    }
+    
+    .contact-method {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .contact-method i {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .contact-method h3 {
+        color: var(--text-primary);
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .social-links {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .social-links a {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--light-color);
+        color: var(--primary-color);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+    
+    .social-links a:hover {
+        background-color: var(--primary-color);
+        color: white;
+        transform: translateY(-3px);
+    }
+    
+    @media (max-width: 768px) {
+        .contact-methods {
+            flex-direction: column;
+            gap: 2rem;
+        }
+    }
+</style>
+{% endblock %} 

@@ -37,6 +37,13 @@
                 {% endif %}
                 <span class="post-views"><i class="fas fa-eye"></i> {{ post.view_count }}</span>
                 <span class="post-reading-time"><i class="fas fa-clock"></i> {{ post.get_reading_time }} {% trans "min read" %}</span>
+                
+                <!-- Text-to-Audio Button -->
+                <span class="audio-button">
+                    <button id="listenButton" class="btn-audio" title="{% trans 'Listen to this post' %}">
+                        <i class="fas fa-volume-up"></i> {% trans "Listen" %}
+                    </button>
+                </span>
             </div>
             
             {% if user.is_authenticated and user == post.author %}
@@ -190,6 +197,18 @@
         {% endif %}
     </div>
 </section>
+
+<!-- Audio Controls -->
+<div id="audioControls" class="audio-controls">
+    <button id="audioPlayPause" title="{% trans 'Play/Pause' %}"><i class="fas fa-pause"></i></button>
+    <button id="audioStop" title="{% trans 'Stop' %}"><i class="fas fa-stop"></i></button>
+    <div class="audio-status" id="audioStatus">{% trans "Reading:" %} {{ post.title }}</div>
+    <div class="audio-progress">
+        <div class="audio-progress-bar" id="audioProgressBar"></div>
+    </div>
+    <button id="audioSpeed" class="audio-speed" title="{% trans 'Change Speed' %}">1x</button>
+</div>
+
 {% endblock %}
 
 {% block extra_css %}
@@ -229,7 +248,7 @@
         align-items: center;
         justify-content: center;
         z-index: 999;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 15px var(--shadow-color);
         transition: all 0.3s ease;
     }
     
@@ -245,15 +264,20 @@
     
     .post-header {
         margin-bottom: 2rem;
-        border-bottom: 1px solid var(--light-gray);
+        border-bottom: 1px solid var(--border-color);
         padding-bottom: 1.5rem;
+        background-color: var(--bg-secondary);
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px var(--shadow-color);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
     
     .post-title {
         font-size: 2.2rem;
         font-weight: 700;
         margin-bottom: 1.2rem;
-        color: var(--secondary-color);
+        color: var(--text-primary);
         line-height: 1.3;
     }
     
@@ -263,7 +287,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1rem;
-        color: var(--gray-color);
+        color: var(--text-secondary);
         font-size: 0.9rem;
     }
     
@@ -374,15 +398,16 @@
         overflow-y: auto;
         font-size: 0.9rem;
         display: none; /* Initially hidden, shown by JS if there are headings */
-        border: 1px solid var(--light-gray);
+        border: 1px solid var(--border-color);
+        transition: background-color 0.3s ease, border-color 0.3s ease;
     }
     
     .toc-title {
         margin-bottom: 1rem;
-        color: var(--secondary-color);
+        color: var(--text-primary);
         font-size: 1.1rem;
         padding-bottom: 0.5rem;
-        border-bottom: 1px solid var(--light-gray);
+        border-bottom: 1px solid var(--border-color);
         font-weight: 600;
     }
     
@@ -396,7 +421,7 @@
     }
     
     .toc-list a {
-        color: var(--gray-color);
+        color: var(--text-secondary);
         text-decoration: none;
         transition: all 0.3s ease;
         display: block;
@@ -423,7 +448,7 @@
     /* Post content */
     .post-content {
         line-height: 1.8;
-        color: var(--dark-color);
+        color: var(--text-primary);
     }
     
     .post-content p {
@@ -435,7 +460,7 @@
     .post-content h4 {
         margin-top: 2rem;
         margin-bottom: 1rem;
-        color: var(--secondary-color);
+        color: var(--text-primary);
     }
     
     .post-content a {
@@ -474,8 +499,9 @@
         border-left: 4px solid var(--primary-color);
         background-color: var(--light-color);
         border-radius: 0 8px 8px 0;
-        color: var(--gray-color);
+        color: var(--text-secondary);
         font-style: italic;
+        transition: background-color 0.3s ease;
     }
     
     .post-content pre {
@@ -509,7 +535,7 @@
         align-items: center;
         margin-top: 3rem;
         padding-top: 1.5rem;
-        border-top: 1px solid var(--light-gray);
+        border-top: 1px solid var(--border-color);
     }
     
     /* Like button */
@@ -527,8 +553,8 @@
         align-items: center;
         gap: 0.5rem;
         background-color: white;
-        color: var(--gray-color);
-        border: 1px solid var(--light-gray);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
         padding: 0.5rem 1rem;
         border-radius: 50px;
         cursor: pointer;
@@ -566,7 +592,7 @@
     }
     
     .share-label {
-        color: var(--gray-color);
+        color: var(--text-secondary);
         font-size: 0.9rem;
     }
     
@@ -583,8 +609,8 @@
         justify-content: center;
         border-radius: 50%;
         background-color: white;
-        border: 1px solid var(--light-gray);
-        color: var(--gray-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
         transition: all 0.3s ease;
         padding: 0;
         cursor: pointer;
@@ -653,13 +679,12 @@
     }
     
     .section-title {
-        font-size: 1.5rem;
-        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1.75rem;
         margin-bottom: 1.5rem;
-        color: var(--secondary-color);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        font-weight: 600;
+        position: relative;
+        padding-bottom: 0.75rem;
     }
     
     .comment-count {
@@ -707,7 +732,7 @@
     
     .related-post-meta {
         display: flex;
-        color: var(--gray-color);
+        color: var(--text-secondary);
         font-size: 0.85rem;
         margin-bottom: 0.75rem;
         gap: 1rem;
@@ -724,7 +749,7 @@
     }
     
     .related-post-excerpt {
-        color: var(--gray-color);
+        color: var(--text-secondary);
         margin-bottom: 1rem;
         line-height: 1.6;
         font-size: 0.95rem;
@@ -736,7 +761,7 @@
     }
     
     .comment-form-container {
-        background-color: var(--light-color);
+        background-color: var(--bg-secondary);
         padding: 1.5rem;
         border-radius: 8px;
         margin-bottom: 2rem;
@@ -744,7 +769,7 @@
     
     .comment-form-container h3 {
         margin-bottom: 1rem;
-        color: var(--secondary-color);
+        color: var(--text-primary);
         font-size: 1.2rem;
     }
     
@@ -755,7 +780,7 @@
     .comment-form textarea {
         width: 100%;
         padding: 0.75rem;
-        border: 1px solid var(--light-gray);
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         font-family: inherit;
         min-height: 120px;
@@ -763,11 +788,11 @@
     }
     
     .login-prompt {
-        background-color: var(--light-color);
+        background-color: var(--bg-secondary);
         padding: 2rem;
         border-radius: 8px;
         text-align: center;
-        color: var(--gray-color);
+        color: var(--text-secondary);
         margin-bottom: 2rem;
     }
     
@@ -788,11 +813,12 @@
     }
     
     .comment {
-        background-color: white;
+        background-color: var(--bg-secondary);
         border-radius: 8px;
         padding: 1.5rem;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 5px var(--shadow-color);
         border-left: 3px solid var(--primary-color);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
     
     .comment-header {
@@ -800,22 +826,22 @@
         justify-content: space-between;
         margin-bottom: 0.75rem;
         padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--light-gray);
+        border-bottom: 1px solid var(--border-color);
     }
     
     .comment-author {
         font-weight: 600;
-        color: var(--secondary-color);
+        color: var(--text-primary);
     }
     
     .comment-date {
-        color: var(--gray-color);
+        color: var(--text-secondary);
         font-size: 0.85rem;
     }
     
     .comment-content {
         line-height: 1.6;
-        color: var(--dark-color);
+        color: var(--text-primary);
         margin-bottom: 1rem;
     }
     
@@ -828,9 +854,9 @@
     .no-comments {
         text-align: center;
         padding: 3rem;
-        background-color: var(--light-color);
+        background-color: var(--bg-secondary);
         border-radius: 8px;
-        color: var(--gray-color);
+        color: var(--text-secondary);
     }
     
     /* Hide TOC on smaller screens */
@@ -867,138 +893,463 @@
             grid-template-columns: 1fr;
         }
     }
+    
+    /* Audio Player Styles */
+    .btn-audio {
+        display: inline-flex;
+        align-items: center;
+        background-color: #f1f8ff;
+        color: var(--primary-color);
+        border: 1px solid #d1e8ff;
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        gap: 0.4rem;
+    }
+    
+    .btn-audio:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-audio.playing {
+        background-color: var(--primary-color);
+        color: white;
+        animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 6px rgba(67, 97, 238, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
+        }
+    }
+    
+    .audio-controls {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--bg-secondary);
+        padding: 0.75rem 1.25rem;
+        border-radius: 50px;
+        box-shadow: 0 3px 15px var(--shadow-color);
+        display: none;
+        align-items: center;
+        gap: 1rem;
+        z-index: 999;
+        max-width: 80%;
+        width: auto;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .audio-controls.active {
+        display: flex;
+    }
+    
+    .audio-controls button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        color: var(--text-primary);
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .audio-controls button:hover {
+        background-color: var(--light-color);
+        color: var(--primary-color);
+    }
+    
+    .audio-status {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+    
+    .audio-progress {
+        flex-grow: 1;
+        height: 5px;
+        background-color: var(--light-gray);
+        border-radius: 5px;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .audio-progress-bar {
+        height: 100%;
+        background-color: var(--primary-color);
+        width: 0;
+        border-radius: 5px;
+    }
+    
+    .audio-speed {
+        background-color: var(--light-color);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        color: var(--primary-color);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .audio-speed:hover {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Reading Progress Bar
-    window.addEventListener('DOMContentLoaded', function() {
-        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Reading progress bar
+        const progressBar = document.querySelector('.reading-progress-bar');
+        const content = document.querySelector('.post-content');
         
-        // Calculate reading progress on scroll
-        window.addEventListener('scroll', function() {
-            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrolled = (winScroll / height) * 100;
-            document.getElementById('readingProgressBar').style.width = scrolled + '%';
-            
-            // Show/hide scroll to top button
-            if (winScroll > 300) {
-                scrollToTopBtn.style.display = 'flex';
-            } else {
-                scrollToTopBtn.style.display = 'none';
-            }
-            
-            // Update active state in TOC
-            updateActiveTocItem();
-        });
-        
-        // Scroll to top when the button is clicked
-        scrollToTopBtn.addEventListener('click', function() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
+        if (progressBar && content) {
+            window.addEventListener('scroll', function() {
+                const contentHeight = content.offsetHeight;
+                const scrollPosition = window.scrollY;
+                const windowHeight = window.innerHeight;
+                const progressPercentage = (scrollPosition / (contentHeight - windowHeight)) * 100;
+                progressBar.style.width = Math.min(progressPercentage, 100) + '%';
             });
-        });
+        }
         
-        // Generate Table of Contents
-        generateTableOfContents();
-    });
-    
-    // Generate Table of Contents from headings in post content
-    function generateTableOfContents() {
-        const postContent = document.querySelector('.post-content');
-        const tocList = document.getElementById('tocList');
-        const tocContainer = document.getElementById('tocContainer');
+        // Scroll to top button
+        const scrollToTopBtn = document.querySelector('.scroll-to-top-btn');
         
-        // Find all headings (h2, h3, h4) in the post content
-        const headings = postContent.querySelectorAll('h2, h3, h4');
-        
-        // If there are at least 3 headings, show the TOC
-        if (headings.length >= 3) {
-            tocContainer.style.display = 'block';
-            
-            // Create TOC items for each heading
-            headings.forEach((heading, index) => {
-                // Add ID to the heading if it doesn't have one
-                if (!heading.id) {
-                    heading.id = 'heading-' + index;
+        if (scrollToTopBtn) {
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 500) {
+                    scrollToTopBtn.style.display = 'flex';
+                } else {
+                    scrollToTopBtn.style.display = 'none';
                 }
-                
-                // Create TOC item
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = '#' + heading.id;
-                a.textContent = heading.textContent;
-                a.className = 'toc-' + heading.tagName.toLowerCase(); // Add class for styling
-                li.appendChild(a);
-                tocList.appendChild(li);
-                
-                // Add click event to scroll smoothly
-                a.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.querySelector(a.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
+            });
+            
+            scrollToTopBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
                 });
             });
         }
-    }
-    
-    // Update active TOC item based on scroll position
-    function updateActiveTocItem() {
-        const scrollPosition = window.scrollY;
-        const headings = document.querySelectorAll('.post-content h2, .post-content h3, .post-content h4');
-        const tocLinks = document.querySelectorAll('.toc-list a');
         
-        // Remove active class from all TOC links
-        tocLinks.forEach(link => link.classList.remove('active'));
+        // Table of Contents generation
+        const postContent = document.querySelector('.post-content');
+        const tocContainer = document.querySelector('.toc-container');
+        const tocList = document.querySelector('.toc-list');
         
-        // Find the current heading and mark corresponding TOC item as active
-        for (let i = headings.length - 1; i >= 0; i--) {
-            const heading = headings[i];
-            if (heading.offsetTop <= scrollPosition + 100) {
-                const id = heading.id;
-                const activeLink = document.querySelector(`.toc-list a[href="#${id}"]`);
-                if (activeLink) {
-                    activeLink.classList.add('active');
-                }
-                break;
+        if (postContent && tocContainer && tocList) {
+            const headings = postContent.querySelectorAll('h2, h3, h4');
+            
+            if (headings.length > 2) {
+                tocContainer.style.display = 'block';
+                
+                headings.forEach(function(heading, index) {
+                    // Add ID to heading if not present
+                    if (!heading.id) {
+                        heading.id = 'heading-' + index;
+                    }
+                    
+                    const listItem = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = '#' + heading.id;
+                    link.textContent = heading.textContent;
+                    
+                    // Add class based on heading level
+                    if (heading.tagName === 'H3') {
+                        listItem.classList.add('toc-sub-item');
+                    } else if (heading.tagName === 'H4') {
+                        listItem.classList.add('toc-sub-sub-item');
+                    }
+                    
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: heading.offsetTop - 20,
+                            behavior: 'smooth'
+                        });
+                    });
+                    
+                    listItem.appendChild(link);
+                    tocList.appendChild(listItem);
+                });
+                
+                // Highlight active section while scrolling
+                window.addEventListener('scroll', function() {
+                    const scrollPosition = window.scrollY;
+                    
+                    headings.forEach(function(heading, index) {
+                        const tocLink = tocList.querySelectorAll('a')[index];
+                        
+                        if (heading.offsetTop - 100 <= scrollPosition && 
+                            (index === headings.length - 1 || headings[index + 1].offsetTop - 100 > scrollPosition)) {
+                            tocLink.classList.add('active');
+                        } else {
+                            tocLink.classList.remove('active');
+                        }
+                    });
+                });
             }
         }
-    }
+        
+        // Text-to-speech functionality
+        const ttsButton = document.getElementById('tts-button');
+        const audioControls = document.querySelector('.audio-controls');
+        const playPauseBtn = document.getElementById('play-pause');
+        const stopBtn = document.getElementById('stop-audio');
+        const speedBtn = document.getElementById('speed-control');
+        const audioStatus = document.querySelector('.audio-status');
+        const progressFill = document.querySelector('.audio-progress-fill');
+        const progressBar2 = document.querySelector('.audio-progress');
+        
+        if (ttsButton && 'speechSynthesis' in window) {
+            let utterance = null;
+            let paused = false;
+            let currentPosition = 0;
+            let totalLength = 0;
+            let speed = 1;
+            
+            ttsButton.addEventListener('click', function() {
+                const postText = document.querySelector('.post-content').textContent;
+                utterance = new SpeechSynthesisUtterance(postText);
+                utterance.rate = speed;
+                
+                // Get available voices
+                let voices = speechSynthesis.getVoices();
+                if (voices.length === 0) {
+                    speechSynthesis.addEventListener('voiceschanged', function() {
+                        voices = speechSynthesis.getVoices();
+                        setPreferredVoice();
+                    });
+                } else {
+                    setPreferredVoice();
+                }
+                
+                function setPreferredVoice() {
+                    // Try to find a good voice in user's language or English
+                    const userLang = navigator.language || navigator.userLanguage;
+                    const langCode = userLang.split('-')[0];
+                    
+                    // First try user's language
+                    let preferredVoice = voices.find(voice => voice.lang.startsWith(langCode) && voice.localService);
+                    
+                    // If not found, try English
+                    if (!preferredVoice) {
+                        preferredVoice = voices.find(voice => voice.lang.startsWith('en') && voice.localService);
+                    }
+                    
+                    // If still not found, use any available voice
+                    if (!preferredVoice && voices.length > 0) {
+                        preferredVoice = voices[0];
+                    }
+                    
+                    if (preferredVoice) {
+                        utterance.voice = preferredVoice;
+                    }
+                }
+                
+                // Update UI
+                audioControls.style.display = 'flex';
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                audioStatus.textContent = '{% trans "Reading post..." %}';
+                
+                // Set up events
+                utterance.onstart = function() {
+                    totalLength = utterance.text.length;
+                };
+                
+                utterance.onpause = function(event) {
+                    paused = true;
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                };
+                
+                utterance.onresume = function(event) {
+                    paused = false;
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                };
+                
+                utterance.onend = function() {
+                    resetAudio();
+                };
+                
+                utterance.onboundary = function(event) {
+                    currentPosition = event.charIndex;
+                    const progress = (currentPosition / totalLength) * 100;
+                    progressFill.style.width = progress + '%';
+                };
+                
+                speechSynthesis.speak(utterance);
+            });
+            
+            // Play/Pause button
+            if (playPauseBtn) {
+                playPauseBtn.addEventListener('click', function() {
+                    if (paused) {
+                        speechSynthesis.resume();
+                        paused = false;
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    } else {
+                        speechSynthesis.pause();
+                        paused = true;
+                        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    }
+                });
+            }
+            
+            // Stop button
+            if (stopBtn) {
+                stopBtn.addEventListener('click', function() {
+                    resetAudio();
+                });
+            }
+            
+            // Speed control
+            if (speedBtn) {
+                speedBtn.addEventListener('click', function() {
+                    speed = speed >= 2 ? 0.75 : speed + 0.25;
+                    speedBtn.textContent = speed + 'x';
+                    
+                    if (utterance && !paused) {
+                        // We need to restart with new speed
+                        const currentText = utterance.text;
+                        speechSynthesis.cancel();
+                        utterance = new SpeechSynthesisUtterance(currentText);
+                        utterance.rate = speed;
+                        speechSynthesis.speak(utterance);
+                    }
+                });
+            }
+            
+            // Progress bar click
+            if (progressBar2) {
+                progressBar2.addEventListener('click', function(e) {
+                    // Currently not supported by the API
+                    // This would ideally jump to a position in the text
+                });
+            }
+            
+            function resetAudio() {
+                speechSynthesis.cancel();
+                paused = false;
+                currentPosition = 0;
+                audioControls.style.display = 'none';
+                progressFill.style.width = '0%';
+            }
+        }
+        
+        // Like button functionality
+        const likeButton = document.getElementById('like-button');
+        const likeCount = document.getElementById('like-count');
+        
+        if (likeButton && likeCount) {
+            likeButton.addEventListener('click', function() {
+                const postId = this.dataset.postId;
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                fetch(`/like-post/${postId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        likeCount.textContent = data.likes;
+                        
+                        if (data.liked) {
+                            likeButton.classList.add('liked');
+                            likeButton.querySelector('i').classList.remove('far');
+                            likeButton.querySelector('i').classList.add('fas');
+                        } else {
+                            likeButton.classList.remove('liked');
+                            likeButton.querySelector('i').classList.remove('fas');
+                            likeButton.querySelector('i').classList.add('far');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        }
+        
+        // Share buttons functionality
+        const shareButtons = document.querySelectorAll('.share-button');
+        
+        shareButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const platform = this.dataset.platform;
+                const postUrl = window.location.href;
+                const postTitle = document.querySelector('.post-title').textContent;
+                
+                let shareUrl;
+                
+                switch(platform) {
+                    case 'twitter':
+                        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(postTitle)}`;
+                        break;
+                    case 'facebook':
+                        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`;
+                        break;
+                    case 'linkedin':
+                        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`;
+                        break;
+                    case 'whatsapp':
+                        shareUrl = `https://wa.me/?text=${encodeURIComponent(postTitle + ' ' + postUrl)}`;
+                        break;
+                }
+                
+                if (shareUrl) {
+                    window.open(shareUrl, '_blank', 'width=600,height=400');
+                }
+            });
+        });
 
-    function copyToClipboard(text) {
-        // Create temporary input element
-        const input = document.createElement('input');
-        input.setAttribute('value', text);
-        document.body.appendChild(input);
+        // Copy link button
+        const copyLinkBtn = document.getElementById('copy-link');
         
-        // Select the text and copy
-        input.select();
-        document.execCommand('copy');
-        
-        // Remove the temporary element
-        document.body.removeChild(input);
-        
-        // Show a message that the link was copied
-        const message = document.createElement('div');
-        message.innerHTML = '<i class="fas fa-check-circle"></i> Link copied to clipboard!';
-        message.className = 'copied-message';
-        document.body.appendChild(message);
-        
-        // Display the message
-        message.style.display = 'flex';
-        
-        // Hide the message after 3 seconds
-        setTimeout(() => {
-            message.style.opacity = '0';
-            message.style.transform = 'translateY(20px)';
-            setTimeout(() => {
-                document.body.removeChild(message);
-            }, 300);
-        }, 3000);
-    }
+        if (copyLinkBtn) {
+            copyLinkBtn.addEventListener('click', function() {
+                const postUrl = window.location.href;
+                
+                navigator.clipboard.writeText(postUrl).then(function() {
+                    // Show success message
+                    const originalText = copyLinkBtn.innerHTML;
+                    copyLinkBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    
+                    setTimeout(function() {
+                        copyLinkBtn.innerHTML = originalText;
+                    }, 2000);
+                });
+            });
+        }
+    });
 </script>
 {% endblock %} 

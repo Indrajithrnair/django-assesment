@@ -1,4 +1,7 @@
 from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+from django.utils.translation import gettext_lazy as _
 from .models import Comment, Post, Category, Tag
 from django.utils.text import slugify
 
@@ -124,4 +127,41 @@ class PostSearchForm(forms.Form):
         label='Sort by',
         initial='-created_date',
         widget=forms.Select(attrs={'class': 'filter-select'})
-    ) 
+    )
+
+class UserRegisterForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+    first_name = forms.CharField(max_length=30, required=False, help_text=_('Optional'))
+    last_name = forms.CharField(max_length=30, required=False, help_text=_('Optional'))
+    
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add placeholders and CSS classes to the fields
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control', 
+            'placeholder': _('Choose a username')
+        })
+        self.fields['email'].widget.attrs.update({
+            'class': 'form-control', 
+            'placeholder': _('Enter your email address')
+        })
+        self.fields['first_name'].widget.attrs.update({
+            'class': 'form-control', 
+            'placeholder': _('Enter your first name (optional)')
+        })
+        self.fields['last_name'].widget.attrs.update({
+            'class': 'form-control', 
+            'placeholder': _('Enter your last name (optional)')
+        })
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control', 
+            'placeholder': _('Enter a password')
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control', 
+            'placeholder': _('Confirm your password')
+        }) 

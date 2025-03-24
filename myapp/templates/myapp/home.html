@@ -1,27 +1,27 @@
 {% extends 'myapp/base.html' %}
+{% load i18n %}
 
-{% block title %}Welcome to My Blog{% endblock %}
+{% block title %}{% trans "Welcome to My Blog" %}{% endblock %}
 
 {% block content %}
 <section class="hero">
-    <h1>Discover Amazing Stories</h1>
-    <p>Welcome to our blog where we share interesting articles, insights, and perspectives on various topics. 
-       Join us on this journey of discovery and learning.</p>
+    <h1>{% trans "Discover Amazing Stories" %}</h1>
+    <p>{% trans "Welcome to our blog where we share interesting articles, insights, and perspectives on various topics. Join us on this journey of discovery and learning." %}</p>
 </section>
 
 <section class="features">
-    <div class="feature-card">
-        <h3>Latest Posts</h3>
-        <p>Stay updated with our most recent articles and stories.</p>
-    </div>
-    <div class="feature-card">
-        <h3>Categories</h3>
-        <p>Explore content organized by topics and themes.</p>
-    </div>
-    <div class="feature-card">
-        <h3>About Us</h3>
-        <p>Learn more about our mission and the team behind this blog.</p>
-    </div>
+    <a href="{% url 'post-list' %}" class="feature-card">
+        <h3><i class="fas fa-clock"></i> {% trans "Latest Posts" %}</h3>
+        <p>{% trans "Stay updated with our most recent articles and stories." %}</p>
+    </a>
+    <a href="{% url 'category-list' %}" class="feature-card">
+        <h3><i class="fas fa-th-large"></i> {% trans "Categories" %}</h3>
+        <p>{% trans "Explore content organized by topics and themes." %}</p>
+    </a>
+    <a href="{% url 'about' %}" class="feature-card">
+        <h3><i class="fas fa-info-circle"></i> {% trans "About Us" %}</h3>
+        <p>{% trans "Learn more about our mission and the team behind this blog." %}</p>
+    </a>
 </section>
 {% endblock %}
 
@@ -34,11 +34,11 @@
     .hero h1 {
         font-size: 2.5rem;
         margin-bottom: 1rem;
-        color: #2c3e50;
+        color: var(--text-primary);
     }
     .hero p {
         font-size: 1.2rem;
-        color: #666;
+        color: var(--text-secondary);
         max-width: 800px;
         margin: 0 auto;
     }
@@ -49,14 +49,28 @@
         margin: 4rem 0;
     }
     .feature-card {
-        background: #f8f9fa;
+        background-color: var(--bg-secondary);
         padding: 2rem;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px var(--shadow-color);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-decoration: none;
+        display: block;
+        border-top: 4px solid var(--primary-color);
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px var(--shadow-color);
     }
     .feature-card h3 {
-        color: #2c3e50;
+        color: var(--primary-color);
         margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .feature-card p {
+        color: var(--text-secondary);
     }
 </style>
 {% endblock %} 

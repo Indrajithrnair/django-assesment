@@ -5,8 +5,9 @@ from django.urls import reverse_lazy
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
+from django.contrib.auth import login
 from .models import Post, Comment, Category, Tag
-from .forms import CommentForm, PostSearchForm, PostForm
+from .forms import CommentForm, PostSearchForm, PostForm, UserRegisterForm
 from django.contrib.auth.models import User
 from django.db.models import Q, Count
 from django.utils import timezone
@@ -14,6 +15,7 @@ from datetime import timedelta
 from django.utils.text import slugify
 from django.core.paginator import Paginator
 from django.utils import translation
+from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.http import HttpResponseRedirect
 
@@ -209,7 +211,12 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, CategoryTagCont
     model = Comment
     fields = ['content']
     template_name = 'myapp/comment_form.html'
-    success_url = reverse_lazy('profile')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add the post to the context
+        context['post'] = self.get_object().post
+        return context
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -219,6 +226,9 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, CategoryTagCont
     def test_func(self):
         comment = self.get_object()
         return self.request.user == comment.author
+        
+    def get_success_url(self):
+        return reverse_lazy('post-detail', kwargs={'pk': self.get_object().post.pk})
 
 class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, CategoryTagContextMixin, generic.DeleteView):
     """View for deleting a comment."""
@@ -409,3 +419,34 @@ class PostSearchView(CategoryTagContextMixin, generic.ListView):
         context['popular_tags'] = Tag.objects.annotate(
             num_posts=Count('posts')).order_by('-num_posts')[:10]
         return context
+
+class CategoryListView(CategoryTagContextMixin, generic.ListView):
+    """View for displaying all categories."""
+    model = Category
+    template_name = 'myapp/category_list.html'
+    context_object_name = 'categories'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add post count for each category
+        for category in context['categories']:
+            category.post_count = Post.objects.filter(category=category).count()
+        return context
+
+class AboutView(CategoryTagContextMixin, generic.TemplateView):
+    """View for displaying about page."""
+    template_name = 'myapp/about.html'
+
+def register(request):
+    """Handle user registration"""
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # Automatically log in the user after registration
+            messages.success(request, _('Your account has been created! You are now logged in.'))
+            return redirect('home')  # Redirect to homepage after successful registration
+    else:
+        form = UserRegisterForm()
+    
+    return render(request, 'myapp/register.html', {'form': form})
