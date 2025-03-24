@@ -11,12 +11,8 @@ services:
         value: ".onrender.com"
       - key: SECRET_KEY
         generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: django_assessment_db
-          property: connectionString
-
-databases:
-  - name: django_assessment_db
-    databaseName: django_assessment
-    user: django_assessment_user 
+    plan: free
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1 

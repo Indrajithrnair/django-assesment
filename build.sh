@@ -21,6 +21,10 @@ fi
 export DJANGO_SETTINGS_MODULE=assessment.settings
 export DJANGO_DEBUG=False
 export DJANGO_ALLOWED_HOSTS=".onrender.com"
+export RENDER=True
+
+# Create data directory for SQLite if needed
+mkdir -p /opt/render/project/src/data
 
 # Collect static files
 python manage.py collectstatic --no-input
