@@ -40,6 +40,7 @@ class Post(models.Model):
     likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts')
     tags = models.ManyToManyField(Tag, blank=True, related_name='posts')
+    view_count = models.PositiveIntegerField(default=0)
     
     class Meta:
         ordering = ['-created_date']  # Sort by newest first
@@ -52,6 +53,13 @@ class Post(models.Model):
 
     def total_likes(self):
         return self.likes.count()
+    
+    def get_reading_time(self):
+        """Calculate the estimated reading time in minutes.
+        Average reading speed is about 200-250 words per minute for adults."""
+        word_count = len(self.content.split())
+        reading_time_minutes = max(1, round(word_count / 200))
+        return reading_time_minutes
     
     def get_related_posts(self):
         """Get posts that share the same category or tags."""
@@ -73,6 +81,12 @@ class Post(models.Model):
         
         # Return at most 3 related posts, ordered by created date
         return related_posts.order_by('-created_date')[:3]
+
+    def increment_view_count(self):
+        """Increment the view count for this post."""
+        self.view_count += 1
+        self.save(update_fields=['view_count'])
+        return self.view_count
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')

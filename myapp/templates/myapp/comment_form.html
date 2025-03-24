@@ -1,24 +1,275 @@
 {% extends "myapp/base.html" %}
 {% load static %}
+{% load i18n %}
+
+{% block title %}{% if form.instance.pk %}{% trans "Edit Comment" %}{% else %}{% trans "Add Comment" %}{% endif %}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h2>Add Comment</h2>
-            <p>Commenting on: <a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></p>
-        </div>
-        <div class="card-body">
-            <p class="mb-3">Please share your thoughts about this blog post. Be respectful and constructive in your comments.</p>
-            <form method="POST">
-                {% csrf_token %}
-                <div class="form-group">
-                    {{ form.as_p }}
+<div class="form-container">
+    <div class="form-header">
+        <h1 class="form-title">
+            {% if form.instance.pk %}
+                <i class="fas fa-edit"></i> {% trans "Edit Comment" %}
+            {% else %}
+                <i class="fas fa-comment"></i> {% trans "Add Comment" %}
+            {% endif %}
+        </h1>
+        <p class="post-reference">
+            {% trans "Commenting on" %}: <a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a>
+        </p>
+    </div>
+    
+    <div class="form-body">
+        <p class="form-info">{% trans "Please share your thoughts about this blog post. Be respectful and constructive in your comments." %}</p>
+        
+        <form method="POST" class="comment-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.content.id_for_label }}">{% trans "Your Comment" %}</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <div class="form-error">{{ form.content.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div id="commentPreview" class="comment-preview">
+                <h3><i class="fas fa-eye"></i> {% trans "Preview" %}</h3>
+                <div class="preview-content">
+                    <p class="preview-placeholder">{% trans "Your comment preview will appear here..." %}</p>
                 </div>
-                <button type="submit" class="btn btn-primary">Submit Comment</button>
-                <a href="{% url 'post-detail' post.pk %}" class="btn btn-secondary">Cancel</a>
-            </form>
-        </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas {% if form.instance.pk %}fa-save{% else %}fa-paper-plane{% endif %}"></i> 
+                    {% if form.instance.pk %}{% trans "Update Comment" %}{% else %}{% trans "Submit Comment" %}{% endif %}
+                </button>
+                <a href="{% url 'post-detail' post.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> {% trans "Cancel" %}
+                </a>
+            </div>
+        </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        padding: 1.5rem;
+        background-color: var(--light-color);
+        border-bottom: 1px solid var(--light-gray);
+    }
+    
+    .form-title {
+        margin-bottom: 0.5rem;
+        color: var(--secondary-color);
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .form-title i {
+        color: var(--primary-color);
+    }
+    
+    .post-reference {
+        color: var(--gray-color);
+        font-size: 0.95rem;
+    }
+    
+    .post-reference a {
+        color: var(--primary-color);
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .post-reference a:hover {
+        color: var(--secondary-color);
+        text-decoration: underline;
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-info {
+        margin-bottom: 1.5rem;
+        color: var(--gray-color);
+        padding: 1rem;
+        background-color: var(--light-color);
+        border-radius: 8px;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .comment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+    
+    .form-group textarea {
+        padding: 0.75rem;
+        border: 1px solid var(--light-gray);
+        border-radius: 6px;
+        font-size: 1rem;
+        min-height: 150px;
+        resize: vertical;
+        font-family: 'Poppins', sans-serif;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .form-group textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        outline: none;
+    }
+    
+    .form-error {
+        color: var(--danger-color);
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+    
+    .comment-preview {
+        background-color: var(--light-color);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+    
+    .comment-preview h3 {
+        color: var(--secondary-color);
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .comment-preview h3 i {
+        color: var(--primary-color);
+    }
+    
+    .preview-content {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 6px;
+        color: var(--dark-color);
+        min-height: 100px;
+    }
+    
+    .preview-placeholder {
+        color: var(--gray-color);
+        font-style: italic;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.95rem;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+    
+    .btn-secondary {
+        background-color: var(--light-color);
+        color: var(--gray-color);
+        border: 1px solid var(--light-gray);
+    }
+    
+    .btn-secondary:hover {
+        background-color: var(--light-gray);
+        color: var(--dark-color);
+    }
+    
+    @media (max-width: 600px) {
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const commentTextarea = document.querySelector('#{{ form.content.id_for_label }}');
+        const previewContent = document.querySelector('.preview-content');
+        const previewPlaceholder = document.querySelector('.preview-placeholder');
+        
+        // Update preview when typing in the textarea
+        commentTextarea.addEventListener('input', function() {
+            const content = this.value.trim();
+            if (content) {
+                previewPlaceholder.style.display = 'none';
+                
+                // Convert line breaks to <br> tags for HTML display
+                const formattedContent = content.replace(/\n/g, '<br>');
+                previewContent.innerHTML = formattedContent;
+            } else {
+                previewPlaceholder.style.display = 'block';
+                previewContent.innerHTML = '<p class="preview-placeholder">{% trans "Your comment preview will appear here..." %}</p>';
+            }
+        });
+        
+        // Initial preview if form is pre-filled (edit mode)
+        if (commentTextarea.value.trim()) {
+            previewPlaceholder.style.display = 'none';
+            const formattedContent = commentTextarea.value.trim().replace(/\n/g, '<br>');
+            previewContent.innerHTML = formattedContent;
+        }
+    });
+</script>
 {% endblock %} 

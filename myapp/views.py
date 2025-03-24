@@ -13,6 +13,9 @@ from django.utils import timezone
 from datetime import timedelta
 from django.utils.text import slugify
 from django.core.paginator import Paginator
+from django.utils import translation
+from django.conf import settings
+from django.http import HttpResponseRedirect
 
 class CategoryTagContextMixin:
     """Mixin to add categories and popular tags to context"""
@@ -33,6 +36,20 @@ def home(request):
         'popular_tags': popular_tags,
     }
     return render(request, 'myapp/home.html', context)
+
+def switch_language(request, language_code):
+    """
+    Switch the language of the site
+    """
+    # Validate the language code
+    if language_code in [lang[0] for lang in settings.LANGUAGES]:
+        translation.activate(language_code)
+        response = HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        response.set_cookie(settings.LANGUAGE_COOKIE_NAME, language_code)
+        return response
+    
+    # If the language code is not valid, redirect to the previous page
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 class CustomLoginView(CategoryTagContextMixin, LoginView):
     """Custom login view."""
@@ -67,6 +84,13 @@ class PostDetailView(CategoryTagContextMixin, generic.DetailView):
     """View for displaying a single blog post."""
     model = Post
     template_name = 'myapp/post_detail.html'
+    
+    def get_object(self, queryset=None):
+        """Get the post object and increment view count."""
+        obj = super().get_object(queryset)
+        # Increment view count
+        obj.increment_view_count()
+        return obj
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -359,6 +383,9 @@ class PostSearchView(CategoryTagContextMixin, generic.ListView):
                 if sort_by == '-likes':
                     # For 'Most liked', we need to annotate with likes count
                     queryset = queryset.annotate(like_count=Count('likes')).order_by('-like_count')
+                elif sort_by == '-view_count':
+                    # For 'Most viewed', order by view_count
+                    queryset = queryset.order_by('-view_count')
                 else:
                     queryset = queryset.order_by(sort_by)
         else:

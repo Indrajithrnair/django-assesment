@@ -1,29 +1,62 @@
+{% load static %}
+{% load i18n %}
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Welcome to My Blog{% endblock %}</title>
+    <title>{% block title %}{% trans "Welcome to My Blog" %}{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4cc9f0;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-color: #6c757d;
+            --light-gray: #e9ecef;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: var(--dark-color);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            background-color: #f5f7fa;
         }
+        
+        a {
+            text-decoration: none;
+            color: var(--primary-color);
+            transition: color 0.3s ease;
+        }
+        
+        a:hover {
+            color: var(--secondary-color);
+        }
+        
+        /* Header */
         header {
-            background-color: #2c3e50;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             padding: 2rem 0;
-            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+        
         .header-content {
             max-width: 1200px;
             margin: 0 auto;
@@ -32,245 +65,435 @@
             flex-direction: column;
             align-items: center;
         }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tagline {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+        
         .header-search {
-            margin-top: 1rem;
             display: flex;
             align-items: center;
             background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
+            border-radius: 50px;
             padding: 0.5rem 1rem;
             width: 100%;
-            max-width: 300px;
+            max-width: 400px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
         }
+        
+        .header-search:focus-within {
+            background-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+        }
+        
         .header-search input {
             background: transparent;
             border: none;
             color: white;
             width: 100%;
-            padding: 0.25rem;
+            padding: 0.25rem 0.5rem;
             outline: none;
+            font-family: 'Poppins', sans-serif;
         }
+        
         .header-search input::placeholder {
             color: rgba(255, 255, 255, 0.7);
         }
+        
         .header-search-btn {
             background: transparent;
             border: none;
             color: white;
             cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1.1rem;
+            transition: transform 0.2s ease;
         }
+        
+        .header-search-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Main Content */
         .main-wrapper {
             display: flex;
             flex-grow: 1;
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 2rem auto;
             width: 100%;
+            padding: 0 1rem;
+            gap: 2rem;
         }
+        
+        /* Sidebar */
         .sidebar {
-            width: 250px;
-            background-color: #f8f9fa;
-            padding: 2rem;
-            border-right: 1px solid #e9ecef;
+            width: 280px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            height: fit-content;
         }
+        
         .sidebar-nav {
             list-style: none;
         }
+        
         .sidebar-nav li {
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
+        
         .sidebar-nav a {
-            color: #2c3e50;
-            text-decoration: none;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
             font-weight: 500;
-            display: block;
-            padding: 0.5rem 0;
-            transition: color 0.3s;
         }
+        
         .sidebar-nav a:hover {
-            color: #1abc9c;
+            background-color: var(--light-color);
+            color: var(--primary-color);
         }
-        .sidebar-nav .nav-item-search {
-            background-color: #1abc9c;
-            border-radius: 4px;
-            margin-bottom: 1.5rem;
+        
+        .sidebar-nav a i {
+            margin-right: 0.75rem;
+            color: var(--primary-color);
+            font-size: 1.1rem;
         }
-        .sidebar-nav .nav-item-search a {
+        
+        .nav-item-primary a {
+            background-color: var(--primary-color);
             color: white;
-            padding: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
         }
-        .sidebar-nav .nav-item-search a:hover {
-            background-color: #16a085;
-            border-radius: 4px;
-        }
-        .sidebar-nav .nav-item-create {
-            background-color: #3498db;
-            border-radius: 4px;
-            margin-bottom: 1.5rem;
-        }
-        .sidebar-nav .nav-item-create a {
+        
+        .nav-item-primary a:hover {
+            background-color: var(--secondary-color);
             color: white;
-            padding: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
         }
-        .sidebar-nav .nav-item-create a:hover {
-            background-color: #2980b9;
-            border-radius: 4px;
-        }
-        main {
-            flex-grow: 1;
-            padding: 2rem;
-        }
-        footer {
-            background-color: #2c3e50;
+        
+        .nav-item-primary a i {
             color: white;
-            text-align: center;
-            padding: 2rem 0;
-            margin-top: auto;
         }
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-        .pagination {
-            margin-top: 2rem;
-            display: flex;
-            justify-content: center;
-        }
-        .pagination .step-links {
-            display: flex;
-            align-items: center;
-        }
-        .pagination a {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            margin: 0 0.25rem;
-            border: 1px solid #ddd;
-            background-color: #fff;
-            color: #2c3e50;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        .pagination a:hover {
-            background-color: #f8f9fa;
-        }
-        .pagination .current {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            margin: 0 0.25rem;
-            border: 1px solid #2c3e50;
-            background-color: #2c3e50;
-            color: white;
-            border-radius: 4px;
-        }
-        .hero {
-            margin: 2rem 0;
-            text-align: center;
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: #2c3e50;
-        }
-        .hero p {
-            font-size: 1.2rem;
-            color: #666;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 4rem 0;
-        }
-        .feature-card {
-            background: #f8f9fa;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .feature-card h3 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-        }
-        .logout-button {
-            background: none;
-            border: none;
-            color: #2c3e50;
-            font-family: inherit;
-            font-size: inherit;
-            cursor: pointer;
-            font-weight: 500;
-            text-align: left;
-            padding: 0.5rem 0;
-            width: 100%;
-            transition: color 0.3s;
-        }
-        .logout-button:hover {
-            color: #1abc9c;
-        }
+        
         .nav-section {
-            margin-top: 2rem;
+            margin-top: 1.5rem;
             margin-bottom: 1rem;
         }
         
-        .nav-section h3 {
-            color: #2c3e50;
-            font-size: 1.1rem;
+        .nav-section-title {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             margin-bottom: 0.75rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e9ecef;
+            padding-left: 1rem;
+            font-weight: 600;
         }
         
         .sidebar-subnav {
             list-style: none;
-            padding-left: 0.5rem;
         }
         
-        .sidebar-subnav li {
-            margin-bottom: 0.5rem;
-        }
-        
-        .sidebar-subnav a {
+        .sidebar-subnav li a {
+            padding: 0.5rem 1rem;
             font-weight: normal;
-            padding: 0.25rem 0;
-        }
-        
-        .nav-empty {
-            color: #6c757d;
-            font-style: italic;
-            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
         }
         
         .sidebar-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
-            padding-left: 0.5rem;
+            padding: 0 0.5rem;
         }
         
         .sidebar-tag {
-            background-color: #f1c40f;
-            color: #2c3e50;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            text-decoration: none;
-            transition: background-color 0.3s;
-            font-weight: normal;
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--light-gray);
         }
         
         .sidebar-tag:hover {
-            background-color: #f39c12;
-            text-decoration: none;
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .nav-empty {
+            color: var(--gray-color);
+            font-style: italic;
+            font-size: 0.9rem;
+            padding-left: 1rem;
+        }
+        
+        .logout-button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--dark-color);
+            font-family: inherit;
+            font-size: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        
+        .logout-button:hover {
+            background-color: #ffeceb;
+            color: var(--danger-color);
+        }
+        
+        .logout-button i {
+            margin-right: 0.75rem;
+            color: var(--danger-color);
+            font-size: 1.1rem;
+        }
+        
+        /* Main content area */
+        main {
+            flex-grow: 1;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+        }
+        
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.1rem;
+            color: var(--gray-color);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        /* Feature Cards */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .feature-card {
+            background-color: var(--light-color);
+            padding: 2rem;
+            border-radius: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-top: 4px solid var(--primary-color);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-card h3 {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .feature-card h3 i {
+            color: var(--primary-color);
+        }
+        
+        .feature-card p {
+            color: var(--gray-color);
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 3rem 0;
+            margin-top: 3rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.7);
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .footer-copyright {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+        
+        /* Pagination */
+        .pagination {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .pagination .step-links {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .pagination a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--light-gray);
+            background-color: white;
+            color: var(--primary-color);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination a:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .pagination .current {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0.75rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+            border: 1px solid var(--primary-color);
+        }
+        
+        /* Language switcher */
+        .language-switcher {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            margin-top: 1.5rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+        }
+        
+        .language-switcher span {
+            color: rgba(255, 255, 255, 0.8);
+            margin-right: 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .language-links {
+            display: flex;
+            list-style: none;
+            gap: 0.5rem;
+        }
+        
+        .language-links li a {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .language-links li a:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .language-links li a.active {
+            color: white;
+            font-weight: 600;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 900px) {
+            .main-wrapper {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .header-content {
+                padding: 0 1rem;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .main-wrapper {
+                margin-top: 1rem;
+                padding: 0 0.5rem;
+            }
+            
+            main {
+                padding: 1.5rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -278,12 +501,15 @@
 <body>
     <header>
         <div class="header-content">
-            <h1>My Blog</h1>
-            <p>A place for thoughts, ideas, and stories</p>
+            <h1 class="logo">{% trans "My Blog" %}</h1>
+            <p class="tagline">{% trans "A place for thoughts, ideas, and stories" %}</p>
             <form action="{% url 'post-search' %}" method="GET" class="header-search">
-                <input type="text" name="query" placeholder="Search blog posts...">
-                <button type="submit" class="header-search-btn">🔍</button>
+                <input type="text" name="query" placeholder="{% trans 'Search blog posts...' %}">
+                <button type="submit" class="header-search-btn"><i class="fas fa-search"></i></button>
             </form>
+            
+            <!-- Language Switcher -->
+            {% include "myapp/includes/language_switcher.html" %}
         </div>
     </header>
 
@@ -291,47 +517,47 @@
         <aside class="sidebar">
             <nav>
                 <ul class="sidebar-nav">
-                    <li class="nav-item-search"><a href="{% url 'post-search' %}">🔍 Search Posts</a></li>
-                    <li><a href="{% url 'home' %}">Home</a></li>
-                    <li><a href="{% url 'post-list' %}">All Blog Posts</a></li>
-                    <li><a href="{% url 'blogger-list' %}">Our Bloggers</a></li>
+                    <li class="nav-item-primary"><a href="{% url 'post-search' %}"><i class="fas fa-search"></i> {% trans "Search Posts" %}</a></li>
+                    <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> {% trans "Home" %}</a></li>
+                    <li><a href="{% url 'post-list' %}"><i class="fas fa-newspaper"></i> {% trans "All Blog Posts" %}</a></li>
+                    <li><a href="{% url 'blogger-list' %}"><i class="fas fa-users"></i> {% trans "Our Bloggers" %}</a></li>
                     
                     <!-- Categories Section -->
                     <li class="nav-section">
-                        <h3>Categories</h3>
+                        <h3 class="nav-section-title">{% trans "Categories" %}</h3>
                         <ul class="sidebar-subnav">
                             {% for category in categories %}
-                                <li><a href="{% url 'category-detail' category.slug %}">{{ category.name }}</a></li>
+                                <li><a href="{% url 'category-detail' category.slug %}"><i class="fas fa-folder"></i> {{ category.name }}</a></li>
                             {% empty %}
-                                <li class="nav-empty">No categories yet</li>
+                                <li class="nav-empty">{% trans "No categories yet" %}</li>
                             {% endfor %}
                         </ul>
                     </li>
                     
                     <!-- Popular Tags Section -->
                     <li class="nav-section">
-                        <h3>Popular Tags</h3>
+                        <h3 class="nav-section-title">{% trans "Popular Tags" %}</h3>
                         <div class="sidebar-tags">
                             {% for tag in popular_tags %}
-                                <a href="{% url 'tag-detail' tag.slug %}" class="sidebar-tag">{{ tag.name }}</a>
+                                <a href="{% url 'tag-detail' tag.slug %}" class="sidebar-tag"># {{ tag.name }}</a>
                             {% empty %}
-                                <span class="nav-empty">No tags yet</span>
+                                <span class="nav-empty">{% trans "No tags yet" %}</span>
                             {% endfor %}
                         </div>
                     </li>
                     
                     {% if user.is_authenticated %}
-                        <li class="nav-item-create"><a href="{% url 'post-create' %}">✏️ Create New Post</a></li>
+                        <li class="nav-item-primary"><a href="{% url 'post-create' %}"><i class="fas fa-edit"></i> {% trans "Create New Post" %}</a></li>
+                        <li><a href="{% url 'profile' %}"><i class="fas fa-user"></i> {% trans "Profile" %}</a></li>
+                        <li><a href="{% url 'admin:index' %}"><i class="fas fa-cog"></i> {% trans "Admin" %}</a></li>
                         <li>
-                            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                            <form method="post" action="{% url 'logout' %}">
                                 {% csrf_token %}
-                                <button type="submit" class="logout-button">Logout</button>
+                                <button type="submit" class="logout-button"><i class="fas fa-sign-out-alt"></i> {% trans "Logout" %}</button>
                             </form>
                         </li>
-                        <li><a href="{% url 'admin:index' %}">Admin</a></li>
-                        <li><a href="{% url 'profile' %}">Profile</a></li>
                     {% else %}
-                        <li><a href="{% url 'login' %}">Login</a></li>
+                        <li><a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> {% trans "Login" %}</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -340,23 +566,22 @@
         <main>
             {% block content %}
             <section class="hero">
-                <h1>Discover Amazing Stories</h1>
-                <p>Welcome to our blog where we share interesting articles, insights, and perspectives on various topics. 
-                   Join us on this journey of discovery and learning.</p>
+                <h1>{% trans "Discover Amazing Stories" %}</h1>
+                <p>{% trans "Welcome to our blog where we share interesting articles, insights, and perspectives on various topics. Join us on this journey of discovery and learning." %}</p>
             </section>
 
             <section class="features">
                 <div class="feature-card">
-                    <h3>Latest Posts</h3>
-                    <p>Stay updated with our most recent articles and stories.</p>
+                    <h3><i class="fas fa-clock"></i> {% trans "Latest Posts" %}</h3>
+                    <p>{% trans "Stay updated with our most recent articles and stories." %}</p>
                 </div>
                 <div class="feature-card">
-                    <h3>Categories</h3>
-                    <p>Explore content organized by topics and themes.</p>
+                    <h3><i class="fas fa-th-large"></i> {% trans "Categories" %}</h3>
+                    <p>{% trans "Explore content organized by topics and themes." %}</p>
                 </div>
                 <div class="feature-card">
-                    <h3>About Us</h3>
-                    <p>Learn more about our mission and the team behind this blog.</p>
+                    <h3><i class="fas fa-info-circle"></i> {% trans "About Us" %}</h3>
+                    <p>{% trans "Learn more about our mission and the team behind this blog." %}</p>
                 </div>
             </section>
             {% endblock %}
@@ -365,7 +590,13 @@
 
     <footer>
         <div class="footer-content">
-            <p>&copy; 2024 My Blog. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">{% trans "About" %}</a>
+                <a href="#">{% trans "Contact" %}</a>
+                <a href="#">{% trans "Privacy Policy" %}</a>
+                <a href="#">{% trans "Terms of Service" %}</a>
+            </div>
+            <p class="footer-copyright">&copy; {% now "Y" %} {% trans "My Blog. All rights reserved." %}</p>
         </div>
     </footer>
     

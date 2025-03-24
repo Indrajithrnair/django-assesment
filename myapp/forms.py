@@ -114,6 +114,7 @@ class PostSearchForm(forms.Form):
         ('-created_date', 'Newest first'),
         ('created_date', 'Oldest first'),
         ('-likes', 'Most liked'),
+        ('-view_count', 'Most viewed'),
         ('title', 'Title A-Z'),
         ('-title', 'Title Z-A'),
     ]

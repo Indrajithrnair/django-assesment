@@ -16,8 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.i18n import i18n_patterns
+from myapp.views import switch_language
 
+# Non-translated URLs
 urlpatterns = [
+    path('language/<str:language_code>/', switch_language, name='switch_language'),
+]
+
+# Translated URLs
+urlpatterns += i18n_patterns(
     path('admin/', admin.site.urls),
     path('', include('myapp.urls')),
-]
+    prefix_default_language=False,  # Don't add /en/ prefix for default language
+)

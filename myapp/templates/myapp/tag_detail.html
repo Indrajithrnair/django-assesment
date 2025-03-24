@@ -1,65 +1,88 @@
 {% extends 'myapp/base.html' %}
+{% load i18n %}
 
-{% block title %}Posts tagged with {{ tag.name }}{% endblock %}
+{% block title %}{% trans "Posts tagged with" %} {{ tag.name }}{% endblock %}
 
 {% block content %}
 <div class="tag-header">
-    <h1>Posts tagged with <span class="tag-highlight">{{ tag.name }}</span></h1>
+    <h1><i class="fas fa-hashtag"></i> {% trans "Posts tagged with" %} <span class="tag-highlight">{{ tag.name }}</span></h1>
+    <div class="tag-meta">
+        <span class="post-count"><i class="fas fa-newspaper"></i> {{ posts.paginator.count }} {% trans "posts" %}</span>
+    </div>
 </div>
 
 <div class="post-list">
     {% if posts %}
         {% for post in posts %}
-            <div class="post-item">
+            <div class="post-card">
                 <h2 class="post-title">
                     <a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a>
                 </h2>
                 <div class="post-meta">
-                    <div>
-                        Posted on {{ post.created_date|date:"F d, Y" }} by 
-                        <a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a>
+                    <div class="post-info">
+                        <span class="post-date"><i class="far fa-calendar-alt"></i> {{ post.created_date|date:"F d, Y" }}</span>
+                        <span class="post-author"><i class="far fa-user"></i> <a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a></span>
                         {% if post.category %}
-                        in <a href="{% url 'category-detail' post.category.slug %}" class="post-category">{{ post.category.name }}</a>
+                        <span class="post-category"><i class="far fa-folder"></i> <a href="{% url 'category-detail' post.category.slug %}">{{ post.category.name }}</a></span>
                         {% endif %}
-                        • {{ post.comments.count }} comment{% if post.comments.count != 1 %}s{% endif %}
-                        • {{ post.likes.count }} like{% if post.likes.count != 1 %}s{% endif %}
+                        <span class="post-comments"><i class="far fa-comment"></i> {{ post.comments.count }}</span>
+                        <span class="post-likes"><i class="far fa-heart"></i> {{ post.likes.count }}</span>
                     </div>
                     
                     {% if post.tags.all %}
                     <div class="post-tags">
                         {% for post_tag in post.tags.all %}
-                        <a href="{% url 'tag-detail' post_tag.slug %}" class="tag {% if post_tag.id == tag.id %}current-tag{% endif %}">{{ post_tag.name }}</a>
+                        <a href="{% url 'tag-detail' post_tag.slug %}" class="post-tag {% if post_tag.id == tag.id %}current-tag{% endif %}"># {{ post_tag.name }}</a>
                         {% endfor %}
                     </div>
                     {% endif %}
                 </div>
-                <div class="post-excerpt">
+                <div class="post-content-preview">
                     {{ post.content|truncatewords:50 }}
                 </div>
-                <a href="{% url 'post-detail' post.pk %}" class="read-more">Read more</a>
+                <div class="post-footer">
+                    <a href="{% url 'post-detail' post.pk %}" class="btn btn-read-more">{% trans "Read More" %} <i class="fas fa-arrow-right"></i></a>
+                </div>
             </div>
         {% endfor %}
 
         <div class="pagination">
             <span class="step-links">
                 {% if posts.has_previous %}
-                    <a href="?page=1">&laquo; first</a>
-                    <a href="?page={{ posts.previous_page_number }}">previous</a>
+                    <a href="?page=1"><i class="fas fa-angle-double-left"></i></a>
+                    <a href="?page={{ posts.previous_page_number }}"><i class="fas fa-angle-left"></i></a>
                 {% endif %}
 
                 <span class="current">
-                    Page {{ posts.number }} of {{ posts.paginator.num_pages }}
+                    {{ posts.number }} / {{ posts.paginator.num_pages }}
                 </span>
 
                 {% if posts.has_next %}
-                    <a href="?page={{ posts.next_page_number }}">next</a>
-                    <a href="?page={{ posts.paginator.num_pages }}">last &raquo;</a>
+                    <a href="?page={{ posts.next_page_number }}"><i class="fas fa-angle-right"></i></a>
+                    <a href="?page={{ posts.paginator.num_pages }}"><i class="fas fa-angle-double-right"></i></a>
                 {% endif %}
             </span>
         </div>
     {% else %}
-        <p class="no-posts">No posts with this tag yet.</p>
+        <div class="empty-state">
+            <i class="fas fa-hashtag fa-4x"></i>
+            <p>{% trans "No posts with this tag yet." %}</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'post-create' %}" class="btn btn-primary"><i class="fas fa-edit"></i> {% trans "Create First Post with This Tag" %}</a>
+            {% endif %}
+        </div>
     {% endif %}
+</div>
+
+<!-- Related tags section -->
+<div class="related-tags-section">
+    <h2 class="section-title"><i class="fas fa-tags"></i> {% trans "Related Tags" %}</h2>
+    <div class="related-tags" id="relatedTags">
+        <!-- This will be populated by JavaScript -->
+        <div class="loading-spinner">
+            <i class="fas fa-circle-notch fa-spin"></i> {% trans "Loading related tags..." %}
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -67,135 +90,407 @@
 <style>
     .tag-header {
         margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--light-gray);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
     }
     
     .tag-header h1 {
-        color: #2c3e50;
+        color: var(--secondary-color);
         margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .tag-header h1 i {
+        color: var(--primary-color);
     }
     
     .tag-highlight {
-        background-color: #f1c40f;
-        color: #2c3e50;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 1.8rem;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.2rem 0.75rem;
+        border-radius: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .tag-meta {
+        display: flex;
+        gap: 1rem;
+        color: var(--gray-color);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .tag-meta i {
+        color: var(--primary-color);
+        margin-right: 0.5rem;
     }
     
     .post-list {
-        margin-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
     }
     
-    .post-item {
-        margin-bottom: 2.5rem;
-        padding-bottom: 2.5rem;
-        border-bottom: 1px solid #e9ecef;
+    .post-card {
+        background-color: var(--light-color);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 1.5rem;
+        border-left: 4px solid var(--primary-color);
     }
     
-    .post-item:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
     
     .post-title {
+        font-size: 1.5rem;
         margin-bottom: 0.75rem;
     }
     
     .post-title a {
-        color: #2c3e50;
+        color: var(--secondary-color);
         text-decoration: none;
-        transition: color 0.3s;
-        font-size: 1.5rem;
+        transition: color 0.3s ease;
     }
     
     .post-title a:hover {
-        color: #1abc9c;
+        color: var(--primary-color);
     }
     
     .post-meta {
-        color: #6c757d;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
         display: flex;
-        flex-wrap: wrap;
         justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
     
-    .post-meta a {
-        color: #2c3e50;
-        text-decoration: none;
+    .post-info {
+        display: flex;
+        gap: 1rem;
+        color: var(--gray-color);
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+    }
+    
+    .post-info a {
+        color: var(--primary-color);
         font-weight: 500;
-        transition: color 0.3s;
     }
     
-    .post-meta a:hover {
-        color: #1abc9c;
+    .post-info a:hover {
+        color: var(--secondary-color);
+    }
+    
+    .post-info i {
+        margin-right: 0.35rem;
+        color: var(--primary-color);
     }
     
     .post-category {
-        background-color: #3498db;
-        color: white !important;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        text-decoration: none;
-        margin-left: 0.25rem;
+        color: var(--primary-color);
     }
     
     .post-tags {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
-        margin-top: 0.5rem;
     }
     
-    .tag {
-        background-color: #f1c40f;
-        color: #2c3e50;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
+    .post-tag {
+        background-color: white;
+        color: var(--primary-color);
+        padding: 0.25rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        transition: all 0.3s ease;
+        border: 1px solid var(--light-gray);
         text-decoration: none;
-        transition: background-color 0.3s;
     }
     
     .current-tag {
-        background-color: #e67e22;
-        font-weight: bold;
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        font-weight: 600;
     }
     
-    .tag:hover {
-        background-color: #f39c12;
-        text-decoration: none;
+    .post-tag:hover {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
     }
     
-    .post-excerpt {
-        color: #495057;
+    .post-content-preview {
+        color: var(--gray-color);
+        margin-bottom: 1.5rem;
         line-height: 1.6;
-        margin-bottom: 1rem;
     }
     
-    .read-more {
-        display: inline-block;
-        color: #3498db;
-        font-weight: 500;
+    .post-footer {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .btn-read-more {
+        color: var(--primary-color);
+        padding: 0.35rem 0.75rem;
+        font-size: 0.85rem;
+        background-color: transparent;
+        border: 1px solid var(--light-gray);
+        border-radius: 50px;
         text-decoration: none;
-        transition: color 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
     }
     
-    .read-more:hover {
-        color: #2980b9;
+    .btn-read-more:hover {
+        background-color: var(--light-color);
+        color: var(--secondary-color);
     }
     
-    .no-posts {
-        color: #6c757d;
-        font-style: italic;
-        padding: 2rem 0;
-        text-align: center;
-        background-color: #f8f9fa;
+    /* Related tags section */
+    .related-tags-section {
+        margin-top: 3rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--secondary-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .section-title i {
+        color: var(--primary-color);
+    }
+    
+    .related-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+    }
+    
+    .tag-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--light-color);
+        border-radius: 50px;
+        text-decoration: none;
+        color: var(--secondary-color);
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        border: 1px solid var(--light-gray);
+    }
+    
+    .tag-item:hover {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .tag-item i {
+        color: var(--primary-color);
+        font-size: 0.8rem;
+    }
+    
+    .tag-item:hover i {
+        color: white;
+    }
+    
+    .tag-count {
+        background-color: white;
+        color: var(--primary-color);
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .tag-item:hover .tag-count {
+        background-color: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+    
+    .loading-spinner {
+        color: var(--gray-color);
+        font-size: 0.9rem;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* Empty state */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 2rem;
+        background-color: var(--light-color);
         border-radius: 8px;
+        color: var(--gray-color);
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .empty-state i {
+        color: var(--primary-color);
+        opacity: 0.7;
+    }
+    
+    .empty-state .btn {
+        margin-top: 1rem;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.9rem;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+    
+    /* Pagination */
+    .pagination {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .pagination .step-links {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .pagination a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--light-gray);
+        background-color: white;
+        color: var(--primary-color);
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .pagination a:hover {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .pagination .current {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 0.75rem;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 4px;
+        border: 1px solid var(--primary-color);
+    }
+    
+    @media (max-width: 600px) {
+        .post-meta {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .post-info {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Simulate fetching related tags
+        // In a real implementation, you would make an AJAX call to your backend
+        setTimeout(function() {
+            fetchRelatedTags();
+        }, 1000);
+    });
+    
+    function fetchRelatedTags() {
+        // In a real implementation, you would make an AJAX call to your backend
+        // For this demo, we'll just simulate it with some static data
+        const relatedTags = [
+            { name: 'Python', count: 15 },
+            { name: 'Django', count: 12 },
+            { name: 'Web Development', count: 8 },
+            { name: 'JavaScript', count: 7 },
+            { name: 'HTML', count: 6 },
+            { name: 'CSS', count: 5 },
+            { name: 'Database', count: 4 },
+            { name: 'REST API', count: 3 }
+        ];
+        
+        displayRelatedTags(relatedTags);
+    }
+    
+    function displayRelatedTags(tags) {
+        const container = document.getElementById('relatedTags');
+        container.innerHTML = '';
+        
+        if (tags.length === 0) {
+            container.innerHTML = '<p class="no-tags">{% trans "No related tags found." %}</p>';
+            return;
+        }
+        
+        tags.forEach(tag => {
+            const tagElement = document.createElement('a');
+            tagElement.href = `/tag/${tag.name.toLowerCase().replace(/\s+/g, '-')}/`;
+            tagElement.className = 'tag-item';
+            tagElement.innerHTML = `
+                <i class="fas fa-hashtag"></i>
+                ${tag.name}
+                <span class="tag-count">${tag.count}</span>
+            `;
+            container.appendChild(tagElement);
+        });
+    }
+</script>
 {% endblock %} 

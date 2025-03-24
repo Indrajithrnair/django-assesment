@@ -1,17 +1,18 @@
 {% extends "myapp/base.html" %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}{% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}{% endblock %}
+{% block title %}{% if form.instance.pk %}{% trans "Edit Post" %}{% else %}{% trans "Create New Post" %}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <h1 class="form-title">{% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}</h1>
+    <h1 class="form-title">{% if form.instance.pk %}{% trans "Edit Post" %}{% else %}{% trans "Create New Post" %}{% endif %}</h1>
     
     <form method="POST" class="post-form">
         {% csrf_token %}
         
         <div class="form-group">
-            <label for="{{ form.title.id_for_label }}">Title</label>
+            <label for="{{ form.title.id_for_label }}">{% trans "Title" %}</label>
             {{ form.title }}
             {% if form.title.errors %}
                 <div class="form-error">{{ form.title.errors }}</div>
@@ -19,41 +20,53 @@
         </div>
         
         <div class="form-group">
-            <label for="{{ form.content.id_for_label }}">Content</label>
+            <label for="{{ form.content.id_for_label }}">{% trans "Content" %}</label>
             {{ form.content }}
             {% if form.content.errors %}
                 <div class="form-error">{{ form.content.errors }}</div>
             {% endif %}
+            <div class="editor-toolbar" id="editorToolbar">
+                <button type="button" class="toolbar-btn" data-tag="h2">{% trans "Heading" %}</button>
+                <button type="button" class="toolbar-btn" data-tag="b">{% trans "Bold" %}</button>
+                <button type="button" class="toolbar-btn" data-tag="i">{% trans "Italic" %}</button>
+                <button type="button" class="toolbar-btn" data-tag="blockquote">{% trans "Quote" %}</button>
+                <button type="button" class="toolbar-btn" data-tag="ul">{% trans "List" %}</button>
+                <button type="button" class="toolbar-btn" data-tag="a">{% trans "Link" %}</button>
+                <button type="button" class="toolbar-btn" data-tag="img">{% trans "Image" %}</button>
+                <button type="button" class="toolbar-btn" data-tag="code">{% trans "Code" %}</button>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group half-width">
+                <label for="{{ form.category.id_for_label }}">{% trans "Category" %}</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <div class="form-error">{{ form.category.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group half-width">
+                <label for="{{ form.new_category.id_for_label }}">{% trans "New Category" %}</label>
+                {{ form.new_category }}
+                <small class="form-help">{{ form.new_category.help_text }}</small>
+                {% if form.new_category.errors %}
+                    <div class="form-error">{{ form.new_category.errors }}</div>
+                {% endif %}
+            </div>
         </div>
         
         <div class="form-group">
-            <label for="{{ form.category.id_for_label }}">Category</label>
-            {{ form.category }}
-            {% if form.category.errors %}
-                <div class="form-error">{{ form.category.errors }}</div>
-            {% endif %}
-        </div>
-        
-        <div class="form-group">
-            <label for="{{ form.new_category.id_for_label }}">New Category</label>
-            {{ form.new_category }}
-            <small class="form-help">{{ form.new_category.help_text }}</small>
-            {% if form.new_category.errors %}
-                <div class="form-error">{{ form.new_category.errors }}</div>
-            {% endif %}
-        </div>
-        
-        <div class="form-group">
-            <label for="{{ form.tags.id_for_label }}">Existing Tags</label>
+            <label for="{{ form.tags.id_for_label }}">{% trans "Existing Tags" %}</label>
             {{ form.tags }}
-            <small class="form-help">Hold CTRL (or CMD on Mac) to select multiple tags</small>
+            <small class="form-help">{% trans "Hold CTRL (or CMD on Mac) to select multiple tags" %}</small>
             {% if form.tags.errors %}
                 <div class="form-error">{{ form.tags.errors }}</div>
             {% endif %}
         </div>
         
         <div class="form-group">
-            <label for="{{ form.new_tags.id_for_label }}">New Tags</label>
+            <label for="{{ form.new_tags.id_for_label }}">{% trans "New Tags" %}</label>
             {{ form.new_tags }}
             <small class="form-help">{{ form.new_tags.help_text }}</small>
             {% if form.new_tags.errors %}
@@ -61,9 +74,19 @@
             {% endif %}
         </div>
         
+        <div class="character-count">
+            <span id="charCount">0</span> {% trans "characters" %}
+            <span class="reading-time-estimate">{% trans "estimated reading time:" %} <span id="readingTime">0</span> {% trans "min" %}</span>
+        </div>
+        
         <div class="form-actions">
-            <button type="submit" class="btn-primary">{% if form.instance.pk %}Update{% else %}Publish{% endif %}</button>
-            <a href="{% url 'post-list' %}" class="btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas {% if form.instance.pk %}fa-save{% else %}fa-paper-plane{% endif %}"></i>
+                {% if form.instance.pk %}{% trans "Update" %}{% else %}{% trans "Publish" %}{% endif %}
+            </button>
+            <a href="{% url 'post-list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> {% trans "Cancel" %}
+            </a>
         </div>
     </form>
 </div>
@@ -77,15 +100,17 @@
         max-width: 800px;
         margin: 0 auto;
         padding: 2rem;
-        background-color: #f8f9fa;
+        background-color: white;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
     
     .form-title {
         margin-bottom: 1.5rem;
-        color: #2c3e50;
+        color: var(--secondary-color);
         font-size: 1.8rem;
+        border-bottom: 1px solid var(--light-gray);
+        padding-bottom: 1rem;
     }
     
     .post-form {
@@ -100,33 +125,66 @@
         gap: 0.5rem;
     }
     
+    .form-row {
+        display: flex;
+        gap: 1.5rem;
+    }
+    
+    .half-width {
+        width: 50%;
+    }
+    
     .form-group label {
         font-weight: 600;
-        color: #2c3e50;
+        color: var(--dark-color);
     }
     
     .form-group input[type="text"] {
         padding: 0.75rem;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
+        border: 1px solid var(--light-gray);
+        border-radius: 6px;
         font-size: 1rem;
+        font-family: 'Poppins', sans-serif;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .form-group input[type="text"]:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        outline: none;
     }
     
     .form-group textarea {
         padding: 0.75rem;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
+        border: 1px solid var(--light-gray);
+        border-radius: 6px;
         font-size: 1rem;
         min-height: 300px;
         resize: vertical;
+        font-family: 'Poppins', sans-serif;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .form-group textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        outline: none;
     }
     
     .form-group select {
         padding: 0.75rem;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
+        border: 1px solid var(--light-gray);
+        border-radius: 6px;
         font-size: 1rem;
         background-color: white;
+        font-family: 'Poppins', sans-serif;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .form-group select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        outline: none;
     }
     
     .form-group select[multiple] {
@@ -134,13 +192,13 @@
     }
     
     .form-error {
-        color: #e74c3c;
+        color: var(--danger-color);
         font-size: 0.9rem;
         margin-top: 0.25rem;
     }
     
     .form-help {
-        color: #7f8c8d;
+        color: var(--gray-color);
         font-size: 0.85rem;
         margin-top: 0.25rem;
     }
@@ -151,45 +209,58 @@
         margin-top: 1rem;
     }
     
-    .btn-primary {
-        padding: 0.75rem 1.5rem;
-        background-color: #3498db;
-        color: white;
-        border: none;
+    .character-count {
+        color: var(--gray-color);
+        font-size: 0.9rem;
+        text-align: right;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    
+    .reading-time-estimate {
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+    
+    /* Editor toolbar */
+    .editor-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        background-color: var(--light-color);
+        padding: 0.75rem;
+        border-radius: 6px;
+    }
+    
+    .toolbar-btn {
+        background-color: white;
+        border: 1px solid var(--light-gray);
         border-radius: 4px;
-        font-weight: 600;
+        padding: 0.4rem 0.75rem;
         cursor: pointer;
-        transition: background-color 0.3s;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
     }
     
-    .btn-primary:hover {
-        background-color: #2980b9;
-    }
-    
-    .btn-secondary {
-        padding: 0.75rem 1.5rem;
-        background-color: #95a5a6;
+    .toolbar-btn:hover {
+        background-color: var(--primary-color);
         color: white;
-        border: none;
-        border-radius: 4px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: background-color 0.3s;
-    }
-    
-    .btn-secondary:hover {
-        background-color: #7f8c8d;
+        border-color: var(--primary-color);
     }
     
     /* Select2 custom styles */
     .select2-container--default .select2-selection--multiple {
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        min-height: 38px;
+        border: 1px solid var(--light-gray);
+        border-radius: 6px;
+        min-height: 42px;
     }
     
     .select2-container--default .select2-selection--multiple .select2-selection__choice {
-        background-color: #3498db;
+        background-color: var(--primary-color);
         color: white;
         border: none;
         border-radius: 4px;
@@ -201,6 +272,23 @@
         color: white;
         margin-right: 5px;
     }
+    
+    .select2-container--default .select2-selection--multiple:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        outline: none;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .half-width {
+            width: 100%;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -211,8 +299,8 @@
 <script>
     $(document).ready(function() {
         // Initialize Select2 for the tags field
-        $('.select2-tags').select2({
-            placeholder: 'Select existing tags',
+        $('#{{ form.tags.id_for_label }}').select2({
+            placeholder: '{% trans "Select existing tags" %}',
             width: '100%'
         });
         
@@ -238,6 +326,87 @@
         // Add change event listener
         categoryField.on('change', toggleNewCategoryField);
         
+        // Character counter and reading time estimator
+        const contentField = $('#{{ form.content.id_for_label }}');
+        const charCount = $('#charCount');
+        const readingTime = $('#readingTime');
+        
+        function updateCounters() {
+            const text = contentField.val();
+            const charLength = text.length;
+            charCount.text(charLength);
+            
+            // Estimate reading time (average reading speed: 200 words per minute)
+            const wordCount = text.trim().split(/\s+/).length;
+            const timeInMinutes = Math.ceil(wordCount / 200);
+            readingTime.text(timeInMinutes);
+        }
+        
+        // Update initially and on input
+        updateCounters();
+        contentField.on('input', updateCounters);
+        
+        // Simple editor toolbar functionality
+        $('.toolbar-btn').on('click', function() {
+            const tag = $(this).data('tag');
+            const textarea = contentField[0];
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            
+            let replacement;
+            
+            switch(tag) {
+                case 'h2':
+                    replacement = `\n## ${selectedText} ##\n`;
+                    break;
+                case 'b':
+                    replacement = `**${selectedText}**`;
+                    break;
+                case 'i':
+                    replacement = `*${selectedText}*`;
+                    break;
+                case 'blockquote':
+                    replacement = `\n> ${selectedText}\n`;
+                    break;
+                case 'ul':
+                    replacement = `\n- ${selectedText.split('\n').join('\n- ')}\n`;
+                    break;
+                case 'a':
+                    const url = prompt('{% trans "Enter URL:" %}', 'https://');
+                    if (url) {
+                        replacement = `[${selectedText || '{% trans "link text" %}'}](${url})`;
+                    } else {
+                        return;
+                    }
+                    break;
+                case 'img':
+                    const imgUrl = prompt('{% trans "Enter image URL:" %}', 'https://');
+                    if (imgUrl) {
+                        replacement = `![${selectedText || '{% trans "image description" %}'}](${imgUrl})`;
+                    } else {
+                        return;
+                    }
+                    break;
+                case 'code':
+                    replacement = `\`${selectedText}\``;
+                    break;
+                default:
+                    return;
+            }
+            
+            // Insert the new text
+            textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
+            
+            // Update counters
+            updateCounters();
+            
+            // Set focus back to textarea with cursor at the right position
+            textarea.focus();
+            textarea.selectionStart = start + replacement.length;
+            textarea.selectionEnd = start + replacement.length;
+        });
+        
         // Add form validation logic
         $('form').on('submit', function(e) {
             const categoryValue = categoryField.val();
@@ -246,11 +415,25 @@
             // If no category is selected and no new category is entered, show error
             if (categoryValue === '' && newCategoryValue === '') {
                 e.preventDefault();
-                alert('Please select an existing category or create a new one.');
+                alert('{% trans "Please select an existing category or create a new one." %}');
                 return false;
             }
             
-            return true;
+            // Check if title is empty
+            const titleValue = $('#{{ form.title.id_for_label }}').val().trim();
+            if (titleValue === '') {
+                e.preventDefault();
+                alert('{% trans "Please enter a title for your post." %}');
+                return false;
+            }
+            
+            // Check if content is too short
+            const contentValue = contentField.val().trim();
+            if (contentValue.length < 50) {
+                e.preventDefault();
+                alert('{% trans "Post content is too short. Please write at least 50 characters." %}');
+                return false;
+            }
         });
     });
 </script>
