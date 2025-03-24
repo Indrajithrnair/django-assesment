@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: django-assessment
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn assessment.wsgi:application"
+    envVars:
+      - key: DJANGO_DEBUG
+        value: False
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: django_assessment_db
+          property: connectionString
+
+databases:
+  - name: django_assessment_db
+    databaseName: django_assessment
+    user: django_assessment_user 
